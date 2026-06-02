@@ -6,9 +6,6 @@
   <title>글씨 쓰기 워크시트 생성기</title>
   <link href="https://fonts.googleapis.com/css2?family=Nanum+Gothic:wght@400;700;800&family=Nanum+Pen+Script&display=swap" rel="stylesheet" />
   <style>
-    /* =============================================
-       전체 레이아웃 & 색상 변수
-    ============================================= */
     :root {
       --sky: #e8f4fd;
       --blue: #3a86c8;
@@ -16,16 +13,16 @@
       --green: #4caf88;
       --yellow: #f9c74f;
       --red: #f4845f;
-      --gray-light: #d0d0d0;  /* 따라쓰기 글자 색 */
+      --purple: #7c5cbf;
+      --purple-light: #f3eeff;
+      --gray-light: #d0d0d0;
       --gray-mid: #888;
       --border: #2b2b2b;
       --bg: #f0f7ff;
       --card: #ffffff;
       --radius: 12px;
     }
-
     * { box-sizing: border-box; margin: 0; padding: 0; }
-
     body {
       font-family: 'Nanum Gothic', sans-serif;
       background: var(--bg);
@@ -36,692 +33,626 @@
       padding: 32px 16px 60px;
     }
 
-    /* =============================================
-       헤더
-    ============================================= */
-    header {
-      text-align: center;
-      margin-bottom: 32px;
-    }
-
+    /* ── 헤더 ── */
+    header { text-align: center; margin-bottom: 32px; }
     header .badge {
-      display: inline-block;
-      background: var(--yellow);
-      color: #333;
-      font-size: 12px;
-      font-weight: 800;
-      letter-spacing: 1px;
-      padding: 4px 12px;
-      border-radius: 20px;
-      margin-bottom: 10px;
+      display: inline-block; background: var(--yellow); color: #333;
+      font-size: 12px; font-weight: 800; letter-spacing: 1px;
+      padding: 4px 12px; border-radius: 20px; margin-bottom: 10px;
     }
+    header h1 { font-size: 28px; font-weight: 800; color: var(--blue-dark); line-height: 1.3; }
+    header h1 span { color: var(--red); }
+    header p { color: var(--gray-mid); margin-top: 8px; font-size: 14px; }
 
-    header h1 {
-      font-size: 28px;
-      font-weight: 800;
-      color: var(--blue-dark);
-      line-height: 1.3;
-    }
-
-    header h1 span {
-      color: var(--red);
-    }
-
-    header p {
-      color: var(--gray-mid);
-      margin-top: 8px;
-      font-size: 14px;
-    }
-
-    /* =============================================
-       컨트롤 패널 (입력 영역)
-    ============================================= */
+    /* ── 패널 ── */
     .panel {
-      background: var(--card);
-      border: 2.5px solid var(--border);
-      border-radius: var(--radius);
-      padding: 28px 32px;
-      width: 100%;
-      max-width: 680px;
-      box-shadow: 5px 5px 0 var(--border);
-      margin-bottom: 28px;
+      background: var(--card); border: 2.5px solid var(--border);
+      border-radius: var(--radius); padding: 28px 32px;
+      width: 100%; max-width: 680px;
+      box-shadow: 5px 5px 0 var(--border); margin-bottom: 28px;
     }
-
     .panel-title {
-      font-size: 13px;
-      font-weight: 800;
-      color: var(--gray-mid);
-      letter-spacing: 1.5px;
-      text-transform: uppercase;
-      margin-bottom: 20px;
+      font-size: 13px; font-weight: 800; color: var(--gray-mid);
+      letter-spacing: 1.5px; text-transform: uppercase; margin-bottom: 20px;
     }
 
-    /* 문장 입력창 */
-    .input-group {
-      margin-bottom: 20px;
-    }
-
-    .input-group label {
-      display: block;
-      font-weight: 700;
-      font-size: 15px;
-      color: #333;
-      margin-bottom: 8px;
-    }
-
+    /* ── 입력창 ── */
+    .input-group { margin-bottom: 20px; }
+    .input-group label { display: block; font-weight: 700; font-size: 15px; color: #333; margin-bottom: 8px; }
     .input-group input[type="text"] {
-      width: 100%;
-      padding: 12px 16px;
-      border: 2.5px solid var(--border);
-      border-radius: 8px;
-      font-size: 18px;
-      font-family: 'Nanum Gothic', sans-serif;
-      font-weight: 700;
-      color: #222;
-      background: #fafafa;
-      outline: none;
+      width: 100%; padding: 12px 16px; border: 2.5px solid var(--border);
+      border-radius: 8px; font-size: 18px; font-family: 'Nanum Gothic', sans-serif;
+      font-weight: 700; color: #222; background: #fafafa; outline: none;
       transition: border-color 0.2s;
     }
+    .input-group input[type="text"]:focus { border-color: var(--blue); background: #fff; }
+    .input-group input[type="text"]::placeholder { color: #bbb; font-weight: 400; }
 
-    .input-group input[type="text"]:focus {
-      border-color: var(--blue);
-      background: #fff;
-    }
-
-    .input-group input[type="text"]::placeholder {
-      color: #bbb;
-      font-weight: 400;
-    }
-
-    /* 모드 선택 */
-    .mode-group {
-      margin-bottom: 24px;
-    }
-
-    .mode-group label.group-label {
-      display: block;
-      font-weight: 700;
-      font-size: 15px;
-      color: #333;
-      margin-bottom: 12px;
-    }
-
-    .mode-options {
-      display: flex;
-      gap: 12px;
-      flex-wrap: wrap;
-    }
-
-    .mode-card {
-      flex: 1;
-      min-width: 200px;
-      position: relative;
-      cursor: pointer;
-    }
-
-    .mode-card input[type="radio"] {
-      position: absolute;
-      opacity: 0;
-      width: 0;
-      height: 0;
-    }
-
+    /* ── 모드 선택 ── */
+    .mode-group { margin-bottom: 24px; }
+    .mode-group label.group-label { display: block; font-weight: 700; font-size: 15px; color: #333; margin-bottom: 12px; }
+    .mode-options { display: flex; gap: 12px; flex-wrap: wrap; }
+    .mode-card { flex: 1; min-width: 160px; position: relative; cursor: pointer; }
+    .mode-card input[type="radio"] { position: absolute; opacity: 0; width: 0; height: 0; }
     .mode-card .card-inner {
-      border: 2.5px solid var(--border);
-      border-radius: 10px;
-      padding: 14px 16px;
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      transition: background 0.15s, box-shadow 0.15s, transform 0.1s;
-      background: #fafafa;
+      border: 2.5px solid var(--border); border-radius: 10px; padding: 14px 16px;
+      display: flex; align-items: center; gap: 12px;
+      transition: background 0.15s, box-shadow 0.15s, transform 0.1s; background: #fafafa;
     }
-
     .mode-card input[type="radio"]:checked + .card-inner {
-      background: var(--sky);
-      border-color: var(--blue);
-      box-shadow: 3px 3px 0 var(--blue);
+      background: var(--sky); border-color: var(--blue); box-shadow: 3px 3px 0 var(--blue);
     }
-
-    .mode-card .card-inner:hover {
-      transform: translateY(-1px);
+    .mode-card.vocab-card input[type="radio"]:checked + .card-inner {
+      background: var(--purple-light); border-color: var(--purple); box-shadow: 3px 3px 0 var(--purple);
     }
+    .mode-card .card-inner:hover { transform: translateY(-1px); }
+    .mode-icon { font-size: 28px; flex-shrink: 0; }
+    .mode-text strong { display: block; font-size: 14px; font-weight: 800; color: #222; }
+    .mode-text span { font-size: 12px; color: var(--gray-mid); }
 
-    .mode-icon {
-      font-size: 28px;
-      flex-shrink: 0;
-    }
-
-    .mode-text strong {
-      display: block;
-      font-size: 14px;
-      font-weight: 800;
-      color: #222;
-    }
-
-    .mode-text span {
-      font-size: 12px;
-      color: var(--gray-mid);
-    }
-
-    /* 그리드 크기 선택 카드 */
-    .size-options {
-      display: flex;
-      gap: 10px;
-      flex-wrap: wrap;
-    }
-
-    .size-card {
-      flex: 1;
-      min-width: 100px;
-      position: relative;
-      cursor: pointer;
-    }
-
-    .size-card input[type="radio"] {
-      position: absolute;
-      opacity: 0;
-      width: 0;
-      height: 0;
-    }
-
+    /* ── 그리드 크기 선택 (모드 1·2 / 모드 3 각각 따로) ── */
+    .size-options { display: flex; gap: 10px; flex-wrap: wrap; }
+    .size-card { flex: 1; min-width: 80px; position: relative; cursor: pointer; }
+    .size-card input[type="radio"] { position: absolute; opacity: 0; width: 0; height: 0; }
     .size-card .size-inner {
-      border: 2.5px solid var(--border);
-      border-radius: 10px;
-      padding: 12px 8px;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 4px;
+      border: 2.5px solid var(--border); border-radius: 10px; padding: 12px 8px;
+      display: flex; flex-direction: column; align-items: center; gap: 4px;
       transition: background 0.15s, box-shadow 0.15s, transform 0.1s;
-      background: #fafafa;
-      text-align: center;
+      background: #fafafa; text-align: center;
     }
-
     .size-card input[type="radio"]:checked + .size-inner {
-      background: #fff8e7;
-      border-color: #d4a017;
-      box-shadow: 3px 3px 0 #d4a017;
+      background: #fff8e7; border-color: #d4a017; box-shadow: 3px 3px 0 #d4a017;
     }
+    .size-card .size-inner:hover { transform: translateY(-1px); }
+    .size-num { font-size: 16px; font-weight: 800; color: #222; }
+    .size-desc { font-size: 11px; color: var(--gray-mid); }
 
-    .size-card .size-inner:hover {
-      transform: translateY(-1px);
-    }
-
-    .size-num {
-      font-size: 18px;
-      font-weight: 800;
-      color: #222;
-    }
-
-    .size-desc {
-      font-size: 11px;
-      color: var(--gray-mid);
-    }
-
-    /* 생성 버튼 */
+    /* ── 버튼 ── */
     .btn-generate {
-      width: 100%;
-      padding: 14px;
-      background: var(--blue-dark);
-      color: #fff;
-      border: 2.5px solid var(--border);
-      border-radius: 10px;
-      font-size: 16px;
-      font-weight: 800;
-      font-family: 'Nanum Gothic', sans-serif;
-      cursor: pointer;
-      box-shadow: 4px 4px 0 var(--border);
-      transition: transform 0.1s, box-shadow 0.1s;
+      width: 100%; padding: 14px; background: var(--blue-dark); color: #fff;
+      border: 2.5px solid var(--border); border-radius: 10px;
+      font-size: 16px; font-weight: 800; font-family: 'Nanum Gothic', sans-serif;
+      cursor: pointer; box-shadow: 4px 4px 0 var(--border);
+      transition: transform 0.1s, box-shadow 0.1s, background 0.2s;
     }
+    .btn-generate:hover { transform: translate(-2px,-2px); box-shadow: 6px 6px 0 var(--border); }
+    .btn-generate:active { transform: translate(2px,2px); box-shadow: 2px 2px 0 var(--border); }
+    .btn-generate.vocab-mode { background: var(--purple); }
 
-    .btn-generate:hover {
-      transform: translate(-2px, -2px);
-      box-shadow: 6px 6px 0 var(--border);
-    }
-
-    .btn-generate:active {
-      transform: translate(2px, 2px);
-      box-shadow: 2px 2px 0 var(--border);
-    }
-
-    /* =============================================
-       미리보기 영역
-    ============================================= */
-    #preview-section {
-      width: 100%;
-      max-width: 780px;
-      display: none;  /* 초기에는 숨김; 워크시트 생성 시 표시 */
-    }
-
+    /* ── 미리보기 ── */
+    #preview-section { width: 100%; max-width: 860px; display: none; }
     .preview-actions {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 16px;
-      flex-wrap: wrap;
-      gap: 10px;
+      display: flex; justify-content: space-between; align-items: center;
+      margin-bottom: 16px; flex-wrap: wrap; gap: 10px;
     }
-
-    .preview-actions h2 {
-      font-size: 16px;
-      font-weight: 800;
-      color: #444;
-    }
-
+    .preview-actions h2 { font-size: 16px; font-weight: 800; color: #444; }
     .btn-print {
-      padding: 10px 24px;
-      background: var(--green);
-      color: #fff;
-      border: 2.5px solid var(--border);
-      border-radius: 8px;
-      font-size: 14px;
-      font-weight: 800;
-      font-family: 'Nanum Gothic', sans-serif;
-      cursor: pointer;
-      box-shadow: 3px 3px 0 var(--border);
+      padding: 10px 24px; background: var(--green); color: #fff;
+      border: 2.5px solid var(--border); border-radius: 8px;
+      font-size: 14px; font-weight: 800; font-family: 'Nanum Gothic', sans-serif;
+      cursor: pointer; box-shadow: 3px 3px 0 var(--border);
       transition: transform 0.1s, box-shadow 0.1s;
     }
+    .btn-print:hover { transform: translate(-1px,-1px); box-shadow: 4px 4px 0 var(--border); }
 
-    .btn-print:hover {
-      transform: translate(-1px, -1px);
-      box-shadow: 4px 4px 0 var(--border);
-    }
-
-    /* =============================================
-       워크시트 (인쇄 대상)
-    ============================================= */
+    /* ── 워크시트 공통 ── */
     #worksheet {
-      background: #fff;
-      border: 2.5px solid var(--border);
-      border-radius: var(--radius);
-      padding: 40px 48px;
-      box-shadow: 6px 6px 0 var(--border);
-      font-family: 'Nanum Gothic', sans-serif;
+      background: #fff; border: 2.5px solid var(--border);
+      border-radius: var(--radius); padding: 40px 48px;
+      box-shadow: 6px 6px 0 var(--border); font-family: 'Nanum Gothic', sans-serif;
     }
-
-    /* 워크시트 헤더 */
-    .ws-header {
-      text-align: center;
-      margin-bottom: 28px;
-    }
-
+    .ws-header { text-align: center; margin-bottom: 28px; }
     .ws-header .ws-title {
-      font-size: 22px;
-      font-weight: 800;
-      color: #111;
-      display: inline-block;
-      border-bottom: 3px solid var(--yellow);
-      padding-bottom: 4px;
+      font-size: 22px; font-weight: 800; color: #111;
+      display: inline-block; border-bottom: 3px solid var(--yellow); padding-bottom: 4px;
     }
 
-    /* 모드 2 전용: 상단 문장 표시 영역 */
+    /* ── 모드 1·2 그리드 ── */
     .ws-sentence-display {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 8px;
-      justify-content: center;
-      margin-bottom: 28px;
-      padding: 20px;
-      background: #f8f9fa;
-      border: 2px solid var(--border);
-      border-radius: 10px;
+      display: flex; flex-wrap: wrap; gap: 8px; justify-content: center;
+      margin-bottom: 28px; padding: 20px;
+      background: #f8f9fa; border: 2px solid var(--border); border-radius: 10px;
     }
-
     .ws-sentence-display .char-chip {
-      width: 60px;
-      height: 60px;
-      border: 2px solid var(--border);
-      border-radius: 8px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 28px;
-      font-weight: 800;
-      color: #111;
-      background: #fff;
+      width: 60px; height: 60px; border: 2px solid var(--border); border-radius: 8px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 28px; font-weight: 800; color: #111; background: #fff;
     }
-
-    /* 4x4 그리드 */
     .ws-grid {
       display: grid;
-      grid-template-columns: repeat(4, 1fr);
       border-top: 2.5px solid var(--border);
       border-left: 2.5px solid var(--border);
     }
-
     .ws-cell {
       border-right: 2.5px solid var(--border);
       border-bottom: 2.5px solid var(--border);
       aspect-ratio: 1 / 1;
+      display: flex; align-items: center; justify-content: center;
+      font-size: clamp(60px,18vw,140px); line-height: 1; font-weight: 700;
+      background: #fff; overflow: hidden;
+    }
+    .ws-cell.trace-char { color: var(--gray-light); user-select: none; }
+    .ws-cell.empty-char { color: transparent; }
+
+    /* ════════════════════════════════════════════
+       모드 3 · 단어 학습 레이아웃
+       ─ 좌측: 이미지 박스
+       ─ 우측: CSS grid 기반 단어 반복 쓰기 그리드
+    ════════════════════════════════════════════ */
+    .vocab-layout {
       display: flex;
-      align-items: center;
-      justify-content: center;
-      /* 칸을 꽉 채우도록 font-size를 칸 너비의 85% 수준으로 설정 */
-      font-size: clamp(60px, 18vw, 140px);
-      line-height: 1;
+      gap: 28px;
+      align-items: flex-start;
+    }
+
+    /* 좌측 이미지 박스 */
+    .vocab-image-box {
+      flex: 0 0 200px;
+      display: flex; flex-direction: column; align-items: center; gap: 12px;
+    }
+    .vocab-img-wrap {
+      width: 190px; height: 190px;
+      border: 3px solid var(--border); border-radius: 12px;
+      overflow: hidden; background: #f0f0f0;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .vocab-img-wrap img { width: 100%; height: 100%; object-fit: cover; }
+    .img-placeholder {
+      display: flex; flex-direction: column; align-items: center;
+      gap: 10px; color: var(--gray-mid); font-size: 13px; font-weight: 700;
+      text-align: center; padding: 16px;
+    }
+    .spinner {
+      width: 36px; height: 36px;
+      border: 4px solid #ddd; border-top-color: var(--purple);
+      border-radius: 50%; animation: spin 0.8s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .vocab-word-label {
+      font-size: 26px; font-weight: 800; color: #111;
+      letter-spacing: 2px; text-align: center;
+      border-bottom: 3px solid var(--purple); padding-bottom: 4px;
+    }
+    .btn-reload-img {
+      padding: 7px 14px; background: #fff;
+      border: 2px solid var(--purple); border-radius: 8px;
+      color: var(--purple); font-size: 13px; font-weight: 800;
+      font-family: 'Nanum Gothic', sans-serif; cursor: pointer;
+      transition: background 0.15s;
+    }
+    .btn-reload-img:hover { background: var(--purple-light); }
+
+    /* 우측 반복 쓰기 그리드
+       ─ CSS grid 사용: 열 수 = 단어 글자 수 (JS에서 --vocab-cols 변수로 주입)
+       ─ 행 수 = 반복 횟수 (적게/보통/많이)
+       ─ 각 셀은 정사각형, 테두리로 구분
+    */
+    .vocab-grid-box { flex: 1; }
+    .vocab-write-grid {
+      display: grid;
+      /* 열 수는 JS에서 style로 직접 주입 */
+      border-top: 2.5px solid var(--border);
+      border-left: 2.5px solid var(--border);
+      width: 100%;
+    }
+    .vocab-write-cell {
+      border-right: 2.5px solid var(--border);
+      border-bottom: 2.5px solid var(--border);
+      aspect-ratio: 1 / 1;
+      display: flex; align-items: center; justify-content: center;
       font-weight: 700;
-      /* 모드 1: 글자가 연하게 보임 (학생이 위에 따라 씀) */
-      /* 모드 2: 빈 칸 (글자 없음) */
-      position: relative;
       background: #fff;
-      overflow: hidden;
+      /* 글자 크기는 JS에서 주입 */
     }
+    /* 힌트 행(첫 번째 반복)은 연한 회색 */
+    .vocab-write-cell.hint { color: var(--gray-light); }
+    /* 나머지 행은 빈 칸 */
+    .vocab-write-cell.blank { color: transparent; }
 
-    /* 모드 1 전용: 연한 회색 글자 */
-    .ws-cell.trace-char {
-      color: var(--gray-light);
-      user-select: none;
-    }
-
-    /* 빈 칸 스타일 */
-    .ws-cell.empty-char {
-      color: transparent;
-    }
-
-    /* =============================================
-       인쇄 전용 스타일 (@media print)
-    ============================================= */
+    /* ── 인쇄 ── */
     @media print {
-      /* 화면 UI 요소 모두 숨김 */
-      body {
-        background: #fff;
-        padding: 0;
-        display: block;
-      }
-
-      header,
-      .panel,
-      .preview-actions {
-        display: none !important;
-      }
-
-      #preview-section {
-        display: block !important;
-        max-width: 100%;
-      }
-
+      body { background: #fff; padding: 0; display: block; }
+      header, .panel, .preview-actions { display: none !important; }
+      #preview-section { display: block !important; max-width: 100%; }
       #worksheet {
-        border: none;
-        box-shadow: none;
-        border-radius: 0;
-        padding: 20mm 20mm;
-        width: 210mm;       /* A4 너비 */
-        min-height: 297mm;  /* A4 높이 */
-        margin: 0 auto;
+        border: none; box-shadow: none; border-radius: 0;
+        padding: 12mm 15mm; width: 210mm; min-height: 297mm; margin: 0 auto;
       }
-
-      .ws-header .ws-title {
-        font-size: 20pt;
-      }
-
-      .ws-cell {
-        font-size: 80pt;
-        line-height: 1;
-      }
-
-      .ws-sentence-display .char-chip {
-        font-size: 22pt;
-        width: 50pt;
-        height: 50pt;
-      }
-
-      /* 페이지 여백 설정 */
-      @page {
-        size: A4;
-        margin: 10mm;
-      }
+      .ws-header .ws-title { font-size: 18pt; }
+      .ws-cell { font-size: 60pt; line-height: 1; }
+      .ws-sentence-display .char-chip { font-size: 20pt; width: 44pt; height: 44pt; }
+      .vocab-img-wrap { width: 150px; height: 150px; }
+      .vocab-word-label { font-size: 18pt; }
+      .btn-reload-img { display: none !important; }
+      @page { size: A4; margin: 8mm; }
     }
   </style>
 </head>
 <body>
 
-  <!-- =============================================
-       헤더 영역
-  ============================================= -->
   <header>
     <div class="badge">✏️ 특수학급 & 초등 저학년용</div>
     <h1>글씨 쓰기 <span>워크시트</span> 생성기</h1>
     <p>문장을 입력하고 모드를 선택하면 인쇄 가능한 워크시트가 자동으로 만들어져요!</p>
   </header>
 
-  <!-- =============================================
-       입력 컨트롤 패널
-  ============================================= -->
   <div class="panel">
     <div class="panel-title">⚙️ 워크시트 설정</div>
 
-    <!-- 문장 입력창 -->
     <div class="input-group">
-      <label for="sentence-input">📝 연습할 문장 입력</label>
-      <input
-        type="text"
-        id="sentence-input"
-        placeholder="예: 지구가 점점 더워져요"
-        maxlength="16"
-      />
+      <label for="sentence-input" id="input-label">📝 연습할 문장 입력</label>
+      <input type="text" id="sentence-input" placeholder="예: 지구가 점점 더워져요" maxlength="16" />
     </div>
 
-    <!-- 모드 선택 (라디오 버튼) -->
+    <!-- 모드 선택 -->
     <div class="mode-group">
       <label class="group-label">🎯 워크시트 모드 선택</label>
       <div class="mode-options">
-
-        <!-- 모드 1: 따라 쓰기 -->
         <label class="mode-card">
-          <input type="radio" name="mode" value="1" checked />
+          <input type="radio" name="mode" value="1" checked onchange="onModeChange()" />
           <div class="card-inner">
             <span class="mode-icon">🖊️</span>
             <div class="mode-text">
               <strong>모드 1 · 따라 쓰기</strong>
-              <span>칸 안에 연한 글씨가 보여요.<br>글씨 위를 따라 쓰세요!</span>
+              <span>연한 글씨 위를<br>따라 쓰세요!</span>
             </div>
           </div>
         </label>
-
-        <!-- 모드 2: 스스로 쓰기 -->
         <label class="mode-card">
-          <input type="radio" name="mode" value="2" />
+          <input type="radio" name="mode" value="2" onchange="onModeChange()" />
           <div class="card-inner">
             <span class="mode-icon">⭐</span>
             <div class="mode-text">
               <strong>모드 2 · 스스로 쓰기</strong>
-              <span>위 글자를 보고 빈 칸에<br>스스로 써 보세요!</span>
+              <span>위 글자를 보고<br>스스로 써 보세요!</span>
             </div>
           </div>
         </label>
-
+        <label class="mode-card vocab-card">
+          <input type="radio" name="mode" value="3" onchange="onModeChange()" />
+          <div class="card-inner">
+            <span class="mode-icon">🖼️</span>
+            <div class="mode-text">
+              <strong>모드 3 · 단어 학습</strong>
+              <span>그림 보며 단어를<br>반복 연습!</span>
+            </div>
+          </div>
+        </label>
       </div>
     </div>
 
-    <!-- 그리드 크기 선택 -->
-    <div class="mode-group">
+    <!-- 모드 1·2용 그리드 크기 -->
+    <div class="mode-group" id="size-group-12">
       <label class="group-label">📐 칸 크기 선택</label>
       <div class="size-options">
         <label class="size-card">
           <input type="radio" name="gridsize" value="4" checked />
-          <div class="size-inner">
-            <span class="size-num">4×4</span>
-            <span class="size-desc">16칸 · 큰 글씨</span>
-          </div>
+          <div class="size-inner"><span class="size-num">4×4</span><span class="size-desc">16칸 · 큰 글씨</span></div>
         </label>
         <label class="size-card">
           <input type="radio" name="gridsize" value="6" />
-          <div class="size-inner">
-            <span class="size-num">6×6</span>
-            <span class="size-desc">36칸 · 중간</span>
-          </div>
+          <div class="size-inner"><span class="size-num">6×6</span><span class="size-desc">36칸 · 중간</span></div>
         </label>
         <label class="size-card">
           <input type="radio" name="gridsize" value="8" />
-          <div class="size-inner">
-            <span class="size-num">8×8</span>
-            <span class="size-desc">64칸 · 작은 글씨</span>
-          </div>
+          <div class="size-inner"><span class="size-num">8×8</span><span class="size-desc">64칸 · 작은 글씨</span></div>
         </label>
         <label class="size-card">
           <input type="radio" name="gridsize" value="10" />
-          <div class="size-inner">
-            <span class="size-num">10×10</span>
-            <span class="size-desc">100칸 · 매우 작게</span>
-          </div>
+          <div class="size-inner"><span class="size-num">10×10</span><span class="size-desc">100칸 · 매우 작게</span></div>
         </label>
       </div>
     </div>
 
-    <!-- 워크시트 생성 버튼 -->
-    <button class="btn-generate" onclick="generateWorksheet()">
+    <!-- 모드 3용 반복 횟수 선택 (기본 숨김) -->
+    <div class="mode-group" id="size-group-3" style="display:none;">
+      <label class="group-label">🔁 쓰기 횟수 선택</label>
+      <div class="size-options">
+        <label class="size-card">
+          <input type="radio" name="vocabrepeat" value="3" />
+          <div class="size-inner"><span class="size-num">📝 적게</span><span class="size-desc">3번 반복</span></div>
+        </label>
+        <label class="size-card">
+          <input type="radio" name="vocabrepeat" value="6" checked />
+          <div class="size-inner"><span class="size-num">📝📝 보통</span><span class="size-desc">6번 반복</span></div>
+        </label>
+        <label class="size-card">
+          <input type="radio" name="vocabrepeat" value="10" />
+          <div class="size-inner"><span class="size-num">📝📝📝 많이</span><span class="size-desc">10번 반복</span></div>
+        </label>
+      </div>
+    </div>
+
+    <button class="btn-generate" id="btn-generate" onclick="generateWorksheet()">
       🎨 워크시트 만들기
     </button>
   </div>
 
-  <!-- =============================================
-       미리보기 영역 (워크시트 생성 후 표시)
-  ============================================= -->
   <div id="preview-section">
     <div class="preview-actions">
       <h2>📄 워크시트 미리보기</h2>
       <button class="btn-print" onclick="window.print()">🖨️ 인쇄하기</button>
     </div>
-
-    <!-- 실제 워크시트 (인쇄 대상) -->
-    <div id="worksheet">
-      <!-- JS로 동적 생성됩니다 -->
-    </div>
+    <div id="worksheet"></div>
   </div>
 
-  <!-- =============================================
-       JavaScript: 워크시트 생성 로직
-  ============================================= -->
   <script>
-    /**
-     * generateWorksheet()
-     * ─────────────────────────────────────────
-     * 입력된 문장, 선택된 모드, 선택된 그리드 크기를 읽어
-     * 워크시트 HTML을 동적으로 생성합니다.
-     */
-    function generateWorksheet() {
-      // 1) 입력값 읽기
-      const sentence  = document.getElementById('sentence-input').value.trim();
-      const mode      = document.querySelector('input[name="mode"]:checked').value;
-      const cols      = parseInt(document.querySelector('input[name="gridsize"]:checked').value); // 열 수 (4/6/8/10)
-      const totalCells = cols * cols; // 전체 칸 수
+    /* ─────────────────────────────────────────
+       모드 변경 시 UI 전환
+    ───────────────────────────────────────── */
+    function onModeChange() {
+      const mode = document.querySelector('input[name="mode"]:checked').value;
+      const sg12  = document.getElementById('size-group-12');
+      const sg3   = document.getElementById('size-group-3');
+      const label = document.getElementById('input-label');
+      const input = document.getElementById('sentence-input');
+      const btn   = document.getElementById('btn-generate');
 
-      // 입력 유효성 검사
-      if (!sentence) {
-        alert('연습할 문장을 입력해 주세요! 😊');
-        return;
+      if (mode === '3') {
+        sg12.style.display  = 'none';
+        sg3.style.display   = 'block';
+        label.textContent   = '🖼️ 학습할 단어 입력 (단어 하나)';
+        input.placeholder   = '예: 사과, 광합성, 고양이';
+        input.maxLength     = 10;
+        btn.textContent     = '🖼️ 단어 학습 워크시트 만들기';
+        btn.classList.add('vocab-mode');
+      } else {
+        sg12.style.display  = 'block';
+        sg3.style.display   = 'none';
+        label.textContent   = '📝 연습할 문장 입력';
+        input.placeholder   = '예: 지구가 점점 더워져요';
+        const cols = parseInt(document.querySelector('input[name="gridsize"]:checked').value);
+        input.maxLength = cols * cols;
+        btn.textContent = '🎨 워크시트 만들기';
+        btn.classList.remove('vocab-mode');
       }
+    }
 
-      // 공백 제거 후 글자 배열로 분리
+    /* ─────────────────────────────────────────
+       메인 분기
+    ───────────────────────────────────────── */
+    function generateWorksheet() {
+      const mode = document.querySelector('input[name="mode"]:checked').value;
+      if (mode === '3') generateVocabWorksheet();
+      else              generateWritingWorksheet();
+    }
+
+    /* ─────────────────────────────────────────
+       모드 1·2: 문장 쓰기 워크시트
+    ───────────────────────────────────────── */
+    function generateWritingWorksheet() {
+      const sentence   = document.getElementById('sentence-input').value.trim();
+      const mode       = document.querySelector('input[name="mode"]:checked').value;
+      const cols       = parseInt(document.querySelector('input[name="gridsize"]:checked').value);
+      const totalCells = cols * cols;
+
+      if (!sentence) { alert('연습할 문장을 입력해 주세요! 😊'); return; }
       const chars = sentence.replace(/\s/g, '').split('');
-
-      // 글자 수가 전체 칸 수를 초과하는지 검사
       if (chars.length > totalCells) {
         alert(`문장이 너무 깁니다! ${cols}×${cols} 그리드는 공백 제외 ${totalCells}글자 이하로 입력해 주세요. 😅`);
         return;
       }
 
-      // 2) 워크시트 컨테이너 초기화
       const worksheet = document.getElementById('worksheet');
       worksheet.innerHTML = '';
 
-      // 3) 워크시트 헤더 생성 (모드에 따라 제목 다르게)
       const header = document.createElement('div');
       header.className = 'ws-header';
-      header.innerHTML = `
-        <span class="ws-title">
-          ${mode === '1' ? '따라 쓸 문장: ' + sentence : '스스로 써 보세요!'}
-        </span>
-      `;
+      header.innerHTML = `<span class="ws-title">${mode === '1' ? '따라 쓸 문장: ' + sentence : '스스로 써 보세요!'}</span>`;
       worksheet.appendChild(header);
 
-      // ─────────────────────────────────────────
-      // 모드 2 전용: 상단에 참고용 글자 표시
-      // ─────────────────────────────────────────
       if (mode === '2') {
-        const sentenceDisplay = document.createElement('div');
-        sentenceDisplay.className = 'ws-sentence-display';
-
-        chars.forEach(char => {
+        const display = document.createElement('div');
+        display.className = 'ws-sentence-display';
+        chars.forEach(ch => {
           const chip = document.createElement('div');
           chip.className = 'char-chip';
-          chip.textContent = char;
-          sentenceDisplay.appendChild(chip);
+          chip.textContent = ch;
+          display.appendChild(chip);
         });
-
-        worksheet.appendChild(sentenceDisplay);
+        worksheet.appendChild(display);
       }
 
-      // ─────────────────────────────────────────
-      // 그리드 생성 (cols × cols 칸)
-      // 글자 크기는 칸이 많을수록 자동으로 작아짐
-      // ─────────────────────────────────────────
+      const fontSizeMap = { 4:'clamp(50px,15vw,130px)', 6:'clamp(28px,9vw,80px)', 8:'clamp(18px,6vw,56px)', 10:'clamp(13px,4.5vw,42px)' };
       const grid = document.createElement('div');
       grid.className = 'ws-grid';
-      grid.style.gridTemplateColumns = `repeat(${cols}, 1fr)`; // 열 수 동적 적용
-
-      // 칸 크기에 따라 글자 크기 조정
-      // cols가 클수록 칸이 작아지므로 폰트도 줄임
-      const fontSizeMap = {
-        4:  'clamp(50px, 15vw, 130px)',
-        6:  'clamp(28px, 9vw,  80px)',
-        8:  'clamp(18px, 6vw,  56px)',
-        10: 'clamp(13px, 4.5vw, 42px)',
-      };
+      grid.style.gridTemplateColumns = `repeat(${cols}, 1fr)`;
 
       for (let i = 0; i < totalCells; i++) {
         const cell = document.createElement('div');
         cell.className = 'ws-cell';
-        cell.style.fontSize = fontSizeMap[cols]; // 그리드 크기별 폰트 적용
-
-        const char = chars[i]; // i번째 글자 (없으면 undefined)
-
+        cell.style.fontSize = fontSizeMap[cols];
+        const ch = chars[i];
         if (mode === '1') {
-          // ── 모드 1: 따라 쓰기 ──────────────────
-          // 해당 칸에 글자가 있으면 연한 회색으로 표시
-          if (char) {
-            cell.classList.add('trace-char');
-            cell.textContent = char;
-          }
+          if (ch) { cell.classList.add('trace-char'); cell.textContent = ch; }
         } else {
-          // ── 모드 2: 스스로 쓰기 ────────────────
-          // 모든 칸을 완전히 비워둠 (글자 힌트 없음)
           cell.classList.add('empty-char');
+        }
+        grid.appendChild(cell);
+      }
+      worksheet.appendChild(grid);
+      showPreview();
+    }
+
+    /* ─────────────────────────────────────────
+       모드 3: 단어 학습 워크시트
+
+       그리드 설계:
+       - 열(column) 수 = 단어 글자 수
+         예) '광합성'(3글자) → 3열
+             '암술'(2글자)  → 2열
+       - 행(row) 수 = 선택한 반복 횟수 (3·6·10)
+       - 1행: 회색 힌트 글자 (따라쓰기)
+       - 나머지 행: 빈 칸 (스스로쓰기)
+       - 각 셀은 aspect-ratio:1/1 정사각형
+    ───────────────────────────────────────── */
+    function generateVocabWorksheet() {
+      const word   = document.getElementById('sentence-input').value.trim().replace(/\s/g, '');
+      if (!word) { alert('학습할 단어를 입력해 주세요! 😊'); return; }
+
+      const chars  = word.split('');
+      const cols   = chars.length;                    // 열 수 = 글자 수
+      const repeat = parseInt(document.querySelector('input[name="vocabrepeat"]:checked').value); // 행 수
+
+      /* 글자 크기: 열 수(=글자 수)가 많을수록 작게 */
+      const fontByLen = {
+        1: '72px', 2: '60px', 3: '48px', 4: '38px',
+        5: '30px', 6: '24px', 7: '20px', 8: '17px',
+        9: '15px', 10:'13px',
+      };
+      const fontSize = fontByLen[cols] || '13px';
+
+      const worksheet = document.getElementById('worksheet');
+      worksheet.innerHTML = '';
+
+      /* 헤더 */
+      const header = document.createElement('div');
+      header.className = 'ws-header';
+      header.innerHTML = `<span class="ws-title">🖼️ 단어 학습: ${word}</span>`;
+      worksheet.appendChild(header);
+
+      /* 좌우 레이아웃 */
+      const layout = document.createElement('div');
+      layout.className = 'vocab-layout';
+
+      /* ── 좌측: 이미지 + 단어 라벨 ── */
+      const imageBox = document.createElement('div');
+      imageBox.className = 'vocab-image-box';
+
+      const imgWrap = document.createElement('div');
+      imgWrap.className = 'vocab-img-wrap';
+      imgWrap.id = 'vocab-img-wrap';
+      imgWrap.innerHTML = `<div class="img-placeholder"><div class="spinner"></div><span>이미지 검색 중...</span></div>`;
+
+      const wordLabel = document.createElement('div');
+      wordLabel.className = 'vocab-word-label';
+      wordLabel.textContent = word;
+
+      const reloadBtn = document.createElement('button');
+      reloadBtn.className = 'btn-reload-img';
+      reloadBtn.textContent = '🔄 다른 이미지';
+      reloadBtn.onclick = () => loadVocabImage(word);
+
+      imageBox.appendChild(imgWrap);
+      imageBox.appendChild(wordLabel);
+      imageBox.appendChild(reloadBtn);
+
+      /* ── 우측: 반복 쓰기 그리드 ──
+         CSS grid로 구성:
+         - gridTemplateColumns: 글자 수만큼 균등 열
+         - 각 셀 aspect-ratio:1/1 → 정사각형 유지
+         - 1행(index 0~cols-1): 힌트(회색)
+         - 나머지 행: 빈 칸
+      */
+      const gridBox = document.createElement('div');
+      gridBox.className = 'vocab-grid-box';
+
+      const grid = document.createElement('div');
+      grid.className = 'vocab-write-grid';
+      grid.style.gridTemplateColumns = `repeat(${cols}, 1fr)`; // 핵심: 글자 수만큼 열
+
+      const totalCells = cols * repeat;
+
+      for (let i = 0; i < totalCells; i++) {
+        const rowIndex = Math.floor(i / cols); // 몇 번째 행인지
+        const colIndex = i % cols;             // 몇 번째 열인지
+
+        const cell = document.createElement('div');
+        cell.className = 'vocab-write-cell';
+        cell.style.fontSize = fontSize;
+
+        if (rowIndex === 0) {
+          /* 첫 번째 행: 힌트 글자 (연한 회색) */
+          cell.classList.add('hint');
+          cell.textContent = chars[colIndex];
+        } else {
+          /* 나머지 행: 빈 칸 */
+          cell.classList.add('blank');
         }
 
         grid.appendChild(cell);
       }
 
-      worksheet.appendChild(grid);
+      gridBox.appendChild(grid);
+      layout.appendChild(imageBox);
+      layout.appendChild(gridBox);
+      worksheet.appendChild(layout);
 
-      // 5) 미리보기 영역 표시 및 스크롤
-      const previewSection = document.getElementById('preview-section');
-      previewSection.style.display = 'block';
-      previewSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      showPreview();
+      loadVocabImage(word); // 이미지 비동기 로드
     }
 
-    // ─────────────────────────────────────────
-    // Enter 키로도 워크시트 생성 가능하도록
-    // ─────────────────────────────────────────
-    document.getElementById('sentence-input').addEventListener('keydown', function (e) {
+    /* ─────────────────────────────────────────
+       Unsplash 이미지 로드
+       한국어 → 영어 변환 후 검색
+    ───────────────────────────────────────── */
+    const UNSPLASH_BASE = 'https://source.unsplash.com/featured/400x400/?';
+    const koToEn = {
+      '사과':'apple','바나나':'banana','포도':'grape','수박':'watermelon',
+      '딸기':'strawberry','오렌지':'orange','복숭아':'peach','배':'pear',
+      '고양이':'cat','강아지':'dog','토끼':'rabbit','곰':'bear','사자':'lion',
+      '호랑이':'tiger','코끼리':'elephant','기린':'giraffe','펭귄':'penguin',
+      '새':'bird','물고기':'fish','나비':'butterfly','꽃':'flower',
+      '나무':'tree','산':'mountain','바다':'ocean','하늘':'sky','구름':'cloud',
+      '비':'rain','눈':'snow','무지개':'rainbow','태양':'sun','달':'moon',
+      '별':'star','자동차':'car','버스':'bus','기차':'train','비행기':'airplane',
+      '집':'house','학교':'school','병원':'hospital','사람':'person','아이':'child',
+      '책':'book','연필':'pencil','가방':'bag','밥':'rice','빵':'bread',
+      '우유':'milk','물':'water','케이크':'cake','피자':'pizza','치킨':'chicken',
+      '수영':'swimming','축구':'soccer','야구':'baseball','농구':'basketball',
+      '봄':'spring','여름':'summer','가을':'autumn','겨울':'winter',
+      '광합성':'photosynthesis plant','식물':'plant','동물':'animal',
+      '암술':'flower pistil','수술':'flower stamen','뿌리':'plant root',
+      '줄기':'plant stem','잎':'leaf','씨앗':'seed','열매':'fruit',
+      '지구':'earth globe','달':'moon','태양계':'solar system',
+    };
+
+    function loadVocabImage(word) {
+      const imgWrap = document.getElementById('vocab-img-wrap');
+      if (!imgWrap) return;
+
+      imgWrap.innerHTML = `<div class="img-placeholder"><div class="spinner"></div><span>이미지 검색 중...</span></div>`;
+
+      const keyword = koToEn[word] || word;
+      const seed    = Date.now();
+      const imgUrl  = `${UNSPLASH_BASE}${encodeURIComponent(keyword)}&sig=${seed}`;
+
+      const img = new Image();
+      img.onload = () => {
+        imgWrap.innerHTML = '';
+        img.style.cssText = 'width:100%;height:100%;object-fit:cover;';
+        imgWrap.appendChild(img);
+      };
+      img.onerror = () => {
+        imgWrap.innerHTML = `<div class="img-placeholder" style="font-size:48px;">🖼️<span style="font-size:12px;margin-top:6px;">이미지 없음<br>(인터넷 연결 확인)</span></div>`;
+      };
+      img.src = imgUrl;
+      img.alt = word;
+      setTimeout(() => { if (!img.complete || img.naturalWidth === 0) img.onerror(); }, 6000);
+    }
+
+    /* ─────────────────────────────────────────
+       공통 유틸
+    ───────────────────────────────────────── */
+    function showPreview() {
+      const s = document.getElementById('preview-section');
+      s.style.display = 'block';
+      s.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+
+    document.getElementById('sentence-input').addEventListener('keydown', e => {
       if (e.key === 'Enter') generateWorksheet();
     });
 
-    // ─────────────────────────────────────────
-    // 그리드 크기 선택 시 입력창 maxlength 동적 업데이트
-    // (선택한 칸 수를 초과해서 입력하지 않도록 안내)
-    // ─────────────────────────────────────────
-    document.querySelectorAll('input[name="gridsize"]').forEach(radio => {
-      radio.addEventListener('change', function () {
+    document.querySelectorAll('input[name="gridsize"]').forEach(r => {
+      r.addEventListener('change', function () {
+        const mode = document.querySelector('input[name="mode"]:checked').value;
+        if (mode === '3') return;
         const cols = parseInt(this.value);
-        const max  = cols * cols;
-        document.getElementById('sentence-input').maxLength = max;
-        document.getElementById('sentence-input').placeholder =
-          `예: 지구가 점점 더워져요 (최대 ${max}글자)`;
+        document.getElementById('sentence-input').maxLength = cols * cols;
+        document.getElementById('sentence-input').placeholder = `예: 지구가 점점 더워져요 (최대 ${cols*cols}글자)`;
       });
     });
   </script>
-
 </body>
 </html>
