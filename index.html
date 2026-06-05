@@ -665,11 +665,11 @@
     }
 
     /* ─────────────────────────────────────────
-       Unsplash 자동 이미지 검색
+       Pixabay API 이미지 검색
        한국어 → 영어 변환 후 검색
-       실패 시 이미지 입력 안내로 대체
+       실패 시 직접 입력 안내로 대체
     ───────────────────────────────────────── */
-    const UNSPLASH_BASE = 'https://source.unsplash.com/featured/400x400/?';
+    const PIXABAY_KEY = '56168825-4c01e93b42b8a36ab2b08a35d';
     const koToEn = {
       '사과':'apple','바나나':'banana','포도':'grape','수박':'watermelon',
       '딸기':'strawberry','오렌지':'orange','복숭아':'peach','배':'pear',
@@ -704,26 +704,23 @@
       imgWrap.innerHTML = `<div class="img-placeholder"><div class="spinner"></div><span>이미지 검색 중...</span></div>`;
 
       const keyword = koToEn[word] || word;
-      const seed    = Date.now();
-      const imgUrl  = `${UNSPLASH_BASE}${encodeURIComponent(keyword)}&sig=${seed}`;
+      // Pixabay API 호출: 한국어 단어를 영어로 변환해서 검색
+      const apiUrl = `https://pixabay.com/api/?key=${PIXABAY_KEY}&q=${encodeURIComponent(keyword)}&image_type=photo&per_page=10&safesearch=true`;
 
-      const img = new Image();
-      img.onload = () => {
-        // 실제 이미지가 맞는지 크기 확인 (Unsplash가 빈 응답 보낼 때 대비)
-        if (img.naturalWidth < 10) { img.onerror(); return; }
-        imgWrap.innerHTML = '';
-        img.style.cssText = 'width:100%;height:100%;object-fit:cover;';
-        imgWrap.appendChild(img);
-      };
-      img.onerror = () => {
-        // 자동 검색 실패 → 직접 입력 안내로 교체
-        imgWrap.innerHTML = showImgFallback('자동 검색 실패');
-      };
-      img.src = imgUrl;
-      // 8초 안에 응답 없으면 실패 처리
-      setTimeout(() => {
-        if (!img.complete || img.naturalWidth < 10) img.onerror();
-      }, 8000);
+      fetch(apiUrl)
+        .then(res => res.json())
+        .then(data => {
+          if (data.hits && data.hits.length > 0) {
+            // 결과 중 랜덤으로 하나 선택
+            const random = data.hits[Math.floor(Math.random() * data.hits.length)];
+            setImageFromUrl(random.webformatURL);
+          } else {
+            imgWrap.innerHTML = showImgFallback('검색 결과 없음<br>아래 버튼으로 직접 추가하세요');
+          }
+        })
+        .catch(() => {
+          imgWrap.innerHTML = showImgFallback('자동 검색 실패<br>아래 버튼으로 직접 추가하세요');
+        });
     }
 
     /* ─────────────────────────────────────────
