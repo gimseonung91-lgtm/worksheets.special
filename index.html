@@ -427,9 +427,10 @@
       const totalCells = cols * cols;
 
       if (!sentence) { alert('연습할 문장을 입력해 주세요! 😊'); return; }
-      const chars = sentence.replace(/\s/g, '').split('');
+      // 띄어쓰기 포함 그대로 분리 — 공백 칸도 빈 칸으로 표시
+      const chars = sentence.split('');
       if (chars.length > totalCells) {
-        alert(`문장이 너무 깁니다! ${cols}×${cols} 그리드는 공백 제외 ${totalCells}글자 이하로 입력해 주세요. 😅`);
+        alert(`문장이 너무 깁니다! ${cols}×${cols} 그리드는 띄어쓰기 포함 ${totalCells}글자 이하로 입력해 주세요. 😅`);
         return;
       }
 
@@ -447,7 +448,8 @@
         chars.forEach(ch => {
           const chip = document.createElement('div');
           chip.className = 'char-chip';
-          chip.textContent = ch;
+          // 공백은 빈 칸으로 표시
+          chip.textContent = ch === ' ' ? '' : ch;
           display.appendChild(chip);
         });
         worksheet.appendChild(display);
@@ -464,7 +466,12 @@
         cell.style.fontSize = fontSizeMap[cols];
         const ch = chars[i];
         if (mode === '1') {
-          if (ch) { cell.classList.add('trace-char'); cell.textContent = ch; }
+          if (ch && ch !== ' ') {
+            // 일반 글자: 연한 회색 힌트
+            cell.classList.add('trace-char');
+            cell.textContent = ch;
+          }
+          // 공백이거나 글자 없는 칸: 빈 칸 그대로
         } else {
           cell.classList.add('empty-char');
         }
