@@ -443,50 +443,88 @@
       /* width / transform 은 fitWorksheetToScreen()에서 주입 */
     }
 
-    /* ── 모드 1·2(글자 쓰기) 화면 채움 모드 ──
-       - 영역을 위에서부터 채우고, 화면이 너무 좁으면 세로 스크롤로 하단까지 볼 수 있게 함
-       - body.tablet-grid-fill 클래스는 JS(syncTabletFillClass)가 토글 */
-    body.tablet-active.tablet-grid-fill #worksheet-scale-area {
+    /* ── 화면 채움 모드 (모드 1·2·3 공통 컨테이너) ──
+       body.tablet-fill 클래스는 JS(syncTabletFillClass)가 토글.
+       영역·래퍼·워크시트를 flex(1 1 0)로 정확히 채워, 행·열 수와 무관하게
+       내부 그리드가 화면을 빈틈없이 메운다. (스크롤 없이 항상 맞춤) */
+    body.tablet-active.tablet-fill #worksheet-scale-area {
       display: flex; flex-direction: column;
-      align-items: stretch; justify-content: flex-start;
-      overflow-y: auto;
-      -webkit-overflow-scrolling: touch;
+      align-items: stretch; justify-content: stretch;
+      overflow: hidden;
     }
-    body.tablet-active.tablet-grid-fill #worksheet-scale-wrapper {
+    body.tablet-active.tablet-fill #worksheet-scale-wrapper {
       position: static;
-      flex: 1 0 auto;
+      flex: 1 1 0; min-height: 0;
       display: flex; flex-direction: column;
-      width: 100%; min-height: 0;
+      width: 100%;
     }
     /* [화면 전용] 인쇄에는 영향 주지 않도록 @media screen 안에 둔다. */
     @media screen {
-      body.tablet-active.tablet-grid-fill #worksheet.grid-fill {
+      /* 워크시트: 영역 전체를 채움 (모드 1·2·3 공통) */
+      body.tablet-active.tablet-fill #worksheet.grid-fill,
+      body.tablet-active.tablet-fill #worksheet.vocab-fill {
         position: static;
-        flex: 1 0 auto;
+        flex: 1 1 0; min-height: 0;
         display: flex; flex-direction: column;
-        width: 100%; min-height: 0;
+        width: 100%;
         margin: 0; padding: 0;
         border-width: 2.5px; border-radius: 0;
         box-shadow: none; transform: none;
         background: #fff;
       }
-      /* 화면 가득 채우기 위해 제목·문장 칩 줄은 숨김 */
-      body.tablet-active.tablet-grid-fill #worksheet.grid-fill .ws-header,
-      body.tablet-active.tablet-grid-fill #worksheet.grid-fill .ws-sentence-display { display: none !important; }
-      /* 그리드: 영역에 맞으면 1fr 로 균등 분배해 가득 채우고,
-         좁으면 행마다 최소 높이(96px)를 유지하며 넘쳐서(스크롤) 하단까지 볼 수 있게 함.
-         flex:1 0 auto + 행 최소높이가 스크롤 폴백을 만든다. */
-      body.tablet-active.tablet-grid-fill #worksheet.grid-fill .ws-grid {
-        flex: 1 0 auto; width: 100%; min-height: 0;
-        grid-template-rows: repeat(var(--ws-rows, 4), minmax(96px, 1fr));
+      /* 제목·문장 칩 줄·이미지 조작 버튼은 숨겨 시트만 보이게 */
+      body.tablet-active.tablet-fill #worksheet .ws-header,
+      body.tablet-active.tablet-fill #worksheet .ws-sentence-display,
+      body.tablet-active.tablet-fill #worksheet .img-controls { display: none !important; }
+
+      /* ── 모드 1·2: 글자 그리드가 화면을 균등(1fr)하게 가득 채움 ── */
+      body.tablet-active.tablet-fill #worksheet.grid-fill .ws-grid {
+        flex: 1 1 0; width: 100%; min-height: 0;
+        grid-template-rows: repeat(var(--ws-rows, 4), 1fr);
         border-top: 2.5px solid var(--border);
         border-left: 2.5px solid var(--border);
       }
-      /* 셀: 정사각 비율 해제, 트랙을 가득 채움. 글자 크기는 행·열 수에 비례 */
-      body.tablet-active.tablet-grid-fill #worksheet.grid-fill .ws-cell {
+      body.tablet-active.tablet-fill #worksheet.grid-fill .ws-cell {
         aspect-ratio: auto; min-width: 0; min-height: 0;
         font-size: min(calc(60vw / var(--ws-cols, 4)),
                        calc(58vh / var(--ws-rows, 4))) !important;
+      }
+
+      /* ── 모드 3: 좌우 여백 없이 이미지 + 쓰기 그리드가 화면을 채움 ── */
+      body.tablet-active.tablet-fill #worksheet.vocab-fill .vocab-layout {
+        flex: 1 1 0; min-height: 0;
+        width: 100%; height: 100%;
+        gap: 10px; align-items: stretch;
+      }
+      /* 좌측 이미지 박스: 높이를 채우고 너비는 정사각 이미지에 맞춰 자동 */
+      body.tablet-active.tablet-fill #worksheet.vocab-fill .vocab-image-box {
+        width: auto !important; flex: 0 0 auto;
+        height: 100%; justify-content: center; gap: 6px;
+      }
+      body.tablet-active.tablet-fill #worksheet.vocab-fill .vocab-img-wrap {
+        width: auto !important; height: auto !important;
+        flex: 1 1 auto; aspect-ratio: 1 / 1; max-height: 100%; min-height: 0;
+      }
+      body.tablet-active.tablet-fill #worksheet.vocab-fill .vocab-word-label {
+        flex: 0 0 auto;
+        font-size: min(4vh, 6vw) !important;
+      }
+      /* 우측 쓰기 그리드: 남은 폭을 모두 차지하고 행·열을 1fr로 채움 */
+      body.tablet-active.tablet-fill #worksheet.vocab-fill .vocab-grid-box {
+        flex: 1 1 0; min-width: 0; height: 100%;
+        display: flex;
+      }
+      body.tablet-active.tablet-fill #worksheet.vocab-fill .vocab-write-grid {
+        flex: 1 1 auto; width: 100%; height: 100%; min-width: 0; min-height: 0;
+        grid-template-columns: repeat(var(--vocab-cols, 2), 1fr) !important;
+        grid-template-rows: repeat(var(--vocab-rows, 3), 1fr) !important;
+        grid-auto-rows: unset !important;
+      }
+      body.tablet-active.tablet-fill #worksheet.vocab-fill .vocab-write-cell {
+        width: auto !important; height: auto !important;
+        min-width: 0; min-height: 0;
+        font-size: min(calc(46vw / var(--vocab-cols, 2)),
+                       calc(52vh / var(--vocab-rows, 3))) !important;
       }
     }
 
@@ -511,11 +549,20 @@
       .img-controls   { display: none !important; }
       .cell-canvas { display: none !important; }
       .tablet-toolbar, .btn-tablet { display: none !important; }
-      /* [태블릿 가로모드] 인쇄 시에는 전체화면/scale을 해제해 A4로 정상 출력 */
+      /* [태블릿] 인쇄 시에는 전체화면/채움 레이아웃을 해제해 A4로 정상 출력 */
       body.tablet-active { overflow: visible !important; height: auto !important; }
       body.tablet-active #preview-section { position: static !important; height: auto !important; padding: 0 !important; }
-      body.tablet-active #worksheet-scale-wrapper { width: auto !important; height: auto !important; position: static !important; }
-      body.tablet-active #worksheet { transform: none !important; width: auto !important; box-shadow: none !important; position: static !important; }
+      body.tablet-active #worksheet-scale-area { display: block !important; overflow: visible !important; }
+      body.tablet-active #worksheet-scale-wrapper { width: auto !important; height: auto !important; min-height: 0 !important; position: static !important; display: block !important; flex: none !important; }
+      body.tablet-active #worksheet {
+        transform: none !important; box-shadow: none !important; position: static !important;
+        width: 210mm !important; height: auto !important; min-height: 0 !important;
+        display: block !important; flex: none !important;
+        padding: 8mm 10mm !important; border: none !important; margin: 0 auto !important;
+      }
+      /* 채움 모드용 화면 전용 셀 크기를 인쇄에서 무효화하고 기본 인쇄 크기 사용 */
+      body.tablet-active #worksheet .ws-grid { height: auto !important; grid-template-rows: none !important; }
+      body.tablet-active #worksheet .ws-cell { aspect-ratio: 1 / 1 !important; font-size: 60pt !important; }
       @page { size: A4 portrait; margin: 0; }
     }
   </style>
@@ -771,7 +818,8 @@
       const worksheet = document.getElementById('worksheet');
       worksheet.innerHTML = '';
       // [태블릿] 글자 그리드는 화면 전체를 채우는 모드
-      worksheet.classList.add('grid-fill');
+      worksheet.classList.add('fill-mode', 'grid-fill');
+      worksheet.classList.remove('vocab-fill');
 
       const header = document.createElement('div');
       header.className = 'ws-header';
@@ -919,7 +967,8 @@
       /* ── DOM 생성 ── */
       const worksheet = document.getElementById('worksheet');
       worksheet.innerHTML = '';
-      // [태블릿] 단어 학습은 화면 채우기 모드가 아니라 중앙 맞춤(scale-to-fit)
+      // [태블릿] 단어 학습도 좌우 여백 없이 화면을 채우는 모드
+      worksheet.classList.add('fill-mode', 'vocab-fill');
       worksheet.classList.remove('grid-fill');
 
       const header = document.createElement('div');
@@ -1003,6 +1052,9 @@
       // 각 열은 정확히 cellPx, 행도 cellPx로 고정
       grid.style.gridTemplateColumns = `repeat(${cols}, ${cellPx}px)`;
       grid.style.gridAutoRows        = `${cellPx}px`;
+      // [태블릿] 화면 채움용: 열 수(=글자 수)·행 수(=반복)를 CSS 변수로 노출
+      grid.style.setProperty('--vocab-cols', cols);
+      grid.style.setProperty('--vocab-rows', repeat);
 
       const totalCells = cols * repeat;
 
@@ -1138,11 +1190,11 @@
        - scale = min(가용너비/자연너비, 가용높이/자연높이) → 제약되는 쪽에 맞춰 최대 확대
        - transform: scale은 캔버스 좌표 변환(getBoundingClientRect 기반)과 호환됨
     ───────────────────────────────────────── */
-    /* 현재 워크시트가 '화면 채움(글자 그리드)' 모드인지에 따라 body 클래스를 동기화 */
+    /* 현재 워크시트가 '화면 채움' 모드(모드 1·2·3 모두)인지에 따라 body 클래스를 동기화 */
     function syncTabletFillClass() {
       const ws = document.getElementById('worksheet');
-      const fill = tabletActive && ws && ws.classList.contains('grid-fill');
-      document.body.classList.toggle('tablet-grid-fill', !!fill);
+      const fill = tabletActive && ws && ws.classList.contains('fill-mode');
+      document.body.classList.toggle('tablet-fill', !!fill);
     }
 
     /* 실제로 보이는 화면 높이(브라우저 UI·시스템 바 제외)를 전체화면 컨테이너에 적용.
@@ -1176,10 +1228,10 @@
         return;
       }
 
-      // ── 모드 1·2(글자 그리드): 화면 전체를 채움 (CSS가 처리) ──
-      // 래퍼·워크시트는 CSS에서 100%/min-height로 채우므로 인라인 크기는 비운다.
-      // 화면이 너무 좁으면 행 최소높이(96px) 때문에 넘쳐서 세로 스크롤된다.
-      if (ws.classList.contains('grid-fill')) {
+      // ── 화면 채움 모드(모드 1·2·3): 레이아웃은 CSS가 처리 ──
+      // 래퍼·워크시트·그리드는 CSS의 flex(1 1 0)로 영역을 정확히 채우므로
+      // 인라인 transform/크기는 모두 비운다. (행·열 수와 무관하게 항상 맞춤)
+      if (ws.classList.contains('fill-mode')) {
         ws.style.transform = '';
         ws.style.width = '';
         wrap.style.width = '';
@@ -1191,7 +1243,7 @@
       const availW = area.clientWidth;
       const availH = area.clientHeight;
 
-      // ── 모드 3(단어 학습): 콘텐츠 비율을 유지하며 화면에 맞춰 축소(중앙 정렬) ──
+      // ── (구) 모드 3 scale-to-fit 경로: fill-mode 가 아닌 경우의 폴백 ──
       // 측정을 위해 변환 제거 + 래퍼 크기 해제
       ws.style.transform = 'none';
       wrap.style.width = '';
@@ -1395,7 +1447,7 @@
         }));
       } else {
         fitWorksheetToScreen();        // transform/width 초기화
-        document.body.classList.remove('tablet-grid-fill');
+        document.body.classList.remove('tablet-fill');
         // 모드 끄면 지우개 상태 초기화
         if (eraserMode) { eraserMode = false; }
         const btn = document.getElementById('btn-eraser');
