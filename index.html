@@ -176,22 +176,23 @@
 
     /* ════════════════════════════════════════════
        모드 3 · 단어 학습 레이아웃
-       ─ 좌측: 이미지 박스
+       ─ 좌측: 이미지 박스 (행 수에 따라 축소)
        ─ 우측: CSS grid 기반 단어 반복 쓰기 그리드
+       ─ 셀 크기·글자 크기는 JS에서 --cell-size / font-size로 주입
     ════════════════════════════════════════════ */
     .vocab-layout {
       display: flex;
-      gap: 28px;
+      gap: 20px;
       align-items: flex-start;
     }
 
-    /* 좌측 이미지 박스 */
+    /* 좌측 이미지 박스: JS에서 width 주입 */
     .vocab-image-box {
-      flex: 0 0 200px;
-      display: flex; flex-direction: column; align-items: center; gap: 12px;
+      flex-shrink: 0;
+      display: flex; flex-direction: column; align-items: center; gap: 8px;
     }
     .vocab-img-wrap {
-      width: 190px; height: 190px;
+      /* width/height는 JS에서 style로 주입 */
       border: 3px solid var(--border); border-radius: 12px;
       overflow: hidden; background: #f0f0f0;
       display: flex; align-items: center; justify-content: center;
@@ -209,9 +210,10 @@
     }
     @keyframes spin { to { transform: rotate(360deg); } }
     .vocab-word-label {
-      font-size: 26px; font-weight: 800; color: #111;
+      font-weight: 800; color: #111;
       letter-spacing: 2px; text-align: center;
       border-bottom: 3px solid var(--purple); padding-bottom: 4px;
+      /* font-size는 JS에서 주입 */
     }
     .btn-reload-img {
       padding: 7px 14px; background: #fff;
@@ -235,30 +237,28 @@
     }
 
     /* 우측 반복 쓰기 그리드
-       ─ CSS grid 사용: 열 수 = 단어 글자 수 (JS에서 --vocab-cols 변수로 주입)
-       ─ 행 수 = 반복 횟수 (적게/보통/많이)
-       ─ 각 셀은 정사각형, 테두리로 구분
+       ─ 열 수 = 글자 수, 행 수 = 반복 횟수
+       ─ 셀 크기는 JS에서 --cell-sz 변수로 주입 → 정사각형 고정
     */
-    .vocab-grid-box { flex: 1; }
+    .vocab-grid-box { flex: 1; min-width: 0; }
     .vocab-write-grid {
       display: grid;
-      /* 열 수는 JS에서 style로 직접 주입 */
       border-top: 2.5px solid var(--border);
       border-left: 2.5px solid var(--border);
-      width: 100%;
+      /* grid-template-columns / grid-auto-rows 는 JS에서 주입 */
     }
     .vocab-write-cell {
       border-right: 2.5px solid var(--border);
       border-bottom: 2.5px solid var(--border);
-      aspect-ratio: 1 / 1;
       display: flex; align-items: center; justify-content: center;
       font-weight: 700;
       background: #fff;
-      /* 글자 크기는 JS에서 주입 */
+      overflow: hidden;
+      /* width/height/font-size 는 JS에서 주입 */
     }
-    /* 힌트 행(첫 번째 반복)은 연한 회색 */
+    /* 힌트: 연한 회색 */
     .vocab-write-cell.hint { color: var(--gray-light); }
-    /* 나머지 행은 빈 칸 */
+    /* 빈 칸 */
     .vocab-write-cell.blank { color: transparent; }
 
     /* ── 태블릿 모드 툴바 ── */
@@ -404,18 +404,21 @@
       #preview-section { display: block !important; max-width: 100%; }
       #worksheet {
         border: none; box-shadow: none; border-radius: 0;
-        padding: 12mm 15mm; width: 210mm; min-height: 297mm; margin: 0 auto;
+        padding: 8mm 10mm; width: 210mm; margin: 0 auto;
+        /* min-height 제거 — 내용물이 A4 안에 딱 맞게 */
       }
-      .ws-header .ws-title { font-size: 18pt; }
+      .ws-header { margin-bottom: 16px; }
+      .ws-header .ws-title { font-size: 16pt; }
       .ws-cell { font-size: 60pt; line-height: 1; }
       .ws-sentence-display .char-chip { font-size: 20pt; width: 44pt; height: 44pt; }
-      .vocab-img-wrap { width: 150px; height: 150px; }
-      .vocab-word-label { font-size: 18pt; }
+      /* vocab: 셀 크기는 JS가 이미 mm 단위로 주입하므로 추가 override 불필요 */
+      .vocab-img-wrap { border-radius: 8px !important; }
+      .vocab-word-label { }
       .btn-reload-img { display: none !important; }
       .img-controls   { display: none !important; }
       .cell-canvas { display: none !important; }
       .tablet-toolbar, .btn-tablet { display: none !important; }
-      @page { size: A4; margin: 8mm; }
+      @page { size: A4 portrait; margin: 0; }
     }
   </style>
 </head>
@@ -724,44 +727,99 @@
       const word   = document.getElementById('sentence-input').value.trim().replace(/\s/g, '');
       if (!word) { alert('학습할 단어를 입력해 주세요! 😊'); return; }
 
-      const chars      = word.split('');
-      const cols       = chars.length;
-      const repeat     = parseInt(document.querySelector('input[name="vocabrepeat"]:checked').value);
-      const writeMode  = document.querySelector('input[name="vocabwritemode"]:checked').value; // 'trace' | 'self'
+      const chars     = word.split('');
+      const cols      = chars.length;                   // 열 수 = 글자 수
+      const repeat    = parseInt(document.querySelector('input[name="vocabrepeat"]:checked').value); // 행 수
+      const writeMode = document.querySelector('input[name="vocabwritemode"]:checked').value;
 
-      const fontByLen = {
-        1: '72px', 2: '60px', 3: '48px', 4: '38px',
-        5: '30px', 6: '24px', 7: '20px', 8: '17px',
-        9: '15px', 10:'13px',
-      };
-      const fontSize = fontByLen[cols] || '13px';
+      /* ── 셀 크기 동적 계산 ──────────────────────────────
+         A4 인쇄 기준 (@page margin:0, padding 8mm×10mm):
+           가용 너비 = 210mm - 20mm(좌우 padding) = 190mm
+           가용 높이 = 297mm - 16mm(상하 padding) - 18mm(헤더) = 263mm
 
+         레이아웃:
+           이미지 박스 너비 = imgW (mm)
+           gap              = 6mm
+           그리드 너비      = 190 - imgW - 6 (mm)
+
+         셀 크기 결정:
+           cellW = 그리드 너비 / cols
+           cellH = 가용 높이 / repeat
+           cellSz = min(cellW, cellH)  → 정사각형
+
+         이미지 박스 너비: repeat이 많을수록 높이가 작아지므로
+           imgH = cellSz × repeat (그리드 전체 높이)
+           imgW = min(imgH, 50mm) 로 이미지도 비례 축소
+      ──────────────────────────────────────────────────── */
+      const PAGE_W    = 190; // mm, 가용 너비
+      const PAGE_H    = 255; // mm, 가용 높이 (헤더/여백 제외)
+      const GAP       = 5;   // mm, 이미지-그리드 간격
+      const IMG_MAX   = 52;  // mm, 이미지 박스 최대 너비
+      const IMG_MIN   = 24;  // mm, 이미지 박스 최소 너비
+
+      // 이미지 박스를 먼저 결정 (repeat × 셀 높이가 이미지 높이가 되도록)
+      // 순환 참조 방지: imgW를 고정 범위로 시작해서 역산
+      function calcLayout(imgW) {
+        const gridW  = PAGE_W - imgW - GAP;
+        const cellW  = gridW / cols;
+        const cellH  = PAGE_H / repeat;
+        const cellSz = Math.min(cellW, cellH);
+        return { cellSz, gridW };
+      }
+
+      // imgW를 반복 수에 맞게 결정: 이미지 높이 = 그리드 전체 높이
+      // → imgH = cellSz × repeat, imgW = min(imgH, IMG_MAX)
+      // 수렴할 때까지 2회 반복
+      let imgW = IMG_MAX;
+      for (let iter = 0; iter < 3; iter++) {
+        const { cellSz } = calcLayout(imgW);
+        const gridH = cellSz * repeat;
+        imgW = Math.min(Math.max(gridH, IMG_MIN), IMG_MAX);
+      }
+      const { cellSz, gridW } = calcLayout(imgW);
+
+      // mm → px 변환 (화면 미리보기용, 96dpi 기준 1mm = 3.7795px)
+      const MM2PX = 3.7795;
+      const cellPx = cellSz * MM2PX;
+      const imgPx  = imgW   * MM2PX;
+
+      // 글자 크기: 셀의 72% (여백 확보)
+      const fontPx = Math.floor(cellPx * 0.72);
+      // 이미지 박스 내 단어 라벨 크기: 이미지 너비에 비례
+      const labelPx = Math.max(Math.floor(imgPx * 0.22), 11);
+
+      /* ── DOM 생성 ── */
       const worksheet = document.getElementById('worksheet');
       worksheet.innerHTML = '';
 
-      /* 헤더 */
       const header = document.createElement('div');
       header.className = 'ws-header';
       const modeLabel = writeMode === 'trace' ? '따라 쓰기' : '스스로 쓰기';
-      header.innerHTML = `<span class="ws-title">🖼️ 단어 학습: ${word} <span style="font-size:14px;font-weight:700;color:#888;margin-left:8px;">${modeLabel}</span></span>`;
+      header.innerHTML = `<span class="ws-title">🖼️ 단어 학습: ${word} <span style="font-size:13px;font-weight:700;color:#888;margin-left:8px;">${modeLabel}</span></span>`;
       worksheet.appendChild(header);
 
-      /* 좌우 레이아웃 */
       const layout = document.createElement('div');
       layout.className = 'vocab-layout';
+      layout.style.gap = `${GAP * MM2PX}px`;
+      layout.style.alignItems = 'flex-start';
 
       /* ── 좌측: 이미지 + 단어 라벨 ── */
       const imageBox = document.createElement('div');
       imageBox.className = 'vocab-image-box';
+      imageBox.style.width = `${imgPx}px`;
 
       const imgWrap = document.createElement('div');
       imgWrap.className = 'vocab-img-wrap';
       imgWrap.id = 'vocab-img-wrap';
+      imgWrap.style.width  = `${imgPx}px`;
+      imgWrap.style.height = `${imgPx}px`;
       imgWrap.innerHTML = `<div class="img-placeholder"><div class="spinner"></div><span>이미지 검색 중...</span></div>`;
 
       const wordLabel = document.createElement('div');
       wordLabel.className = 'vocab-word-label';
       wordLabel.textContent = word;
+      wordLabel.style.fontSize = `${labelPx}px`;
+      wordLabel.style.width = '100%';
 
       const imgControls = document.createElement('div');
       imgControls.className = 'img-controls no-print';
@@ -769,24 +827,23 @@
       const reloadBtn = document.createElement('button');
       reloadBtn.className = 'btn-reload-img';
       reloadBtn.textContent = '🔄 자동 검색';
+      reloadBtn.style.fontSize = '11px'; reloadBtn.style.padding = '5px 8px';
       reloadBtn.onclick = () => loadVocabImage(word);
 
       const urlBtn = document.createElement('button');
       urlBtn.className = 'btn-reload-img';
       urlBtn.textContent = '🔗 주소로 넣기';
+      urlBtn.style.fontSize = '11px'; urlBtn.style.padding = '5px 8px';
       urlBtn.onclick = () => {
         const url = prompt('이미지 주소(URL)를 붙여넣으세요.\n\n구글 이미지에서 원하는 이미지 위에\n마우스 우클릭 → "이미지 주소 복사" 후 붙여넣기!');
         if (url && url.trim()) setImageFromUrl(url.trim());
       };
 
       const fileInput = document.createElement('input');
-      fileInput.type = 'file';
-      fileInput.accept = 'image/*';
-      fileInput.style.display = 'none';
-      fileInput.id = 'vocab-file-input';
+      fileInput.type = 'file'; fileInput.accept = 'image/*';
+      fileInput.style.display = 'none'; fileInput.id = 'vocab-file-input';
       fileInput.onchange = (e) => {
-        const file = e.target.files[0];
-        if (!file) return;
+        const file = e.target.files[0]; if (!file) return;
         const reader = new FileReader();
         reader.onload = (ev) => setImageFromUrl(ev.target.result);
         reader.readAsDataURL(file);
@@ -795,6 +852,7 @@
       const fileBtn = document.createElement('button');
       fileBtn.className = 'btn-reload-img';
       fileBtn.textContent = '📁 파일 업로드';
+      fileBtn.style.fontSize = '11px'; fileBtn.style.padding = '5px 8px';
       fileBtn.onclick = () => fileInput.click();
 
       imgControls.appendChild(reloadBtn);
@@ -812,7 +870,9 @@
 
       const grid = document.createElement('div');
       grid.className = 'vocab-write-grid';
-      grid.style.gridTemplateColumns = `repeat(${cols}, 1fr)`;
+      // 각 열은 정확히 cellPx, 행도 cellPx로 고정
+      grid.style.gridTemplateColumns = `repeat(${cols}, ${cellPx}px)`;
+      grid.style.gridAutoRows        = `${cellPx}px`;
 
       const totalCells = cols * repeat;
 
@@ -822,14 +882,14 @@
 
         const cell = document.createElement('div');
         cell.className = 'vocab-write-cell';
-        cell.style.fontSize = fontSize;
+        cell.style.width    = `${cellPx}px`;
+        cell.style.height   = `${cellPx}px`;
+        cell.style.fontSize = `${fontPx}px`;
 
         if (writeMode === 'trace') {
-          /* 따라 쓰기: 모든 행에 회색 힌트 */
           cell.classList.add('hint');
           cell.textContent = chars[colIndex];
         } else {
-          /* 스스로 쓰기: 첫 행만 힌트, 나머지 빈 칸 */
           if (rowIndex === 0) {
             cell.classList.add('hint');
             cell.textContent = chars[colIndex];
