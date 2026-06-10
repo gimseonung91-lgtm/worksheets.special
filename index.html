@@ -422,9 +422,16 @@
       display: flex; align-items: center; justify-content: center;
       overflow: hidden;
     }
+    /* 래퍼: JS가 scale된 실제 크기(width/height)를 주입 → flex 중앙정렬이 정상 작동 */
+    body.tablet-active #worksheet-scale-wrapper {
+      position: relative;
+      flex-shrink: 0;
+      /* width / height 는 fitWorksheetToScreen()에서 주입 */
+    }
     body.tablet-active #worksheet {
-      margin: 0; flex-shrink: 0;
-      transform-origin: center center;
+      position: absolute; top: 0; left: 0;
+      margin: 0;
+      transform-origin: top left;
       box-shadow: 4px 4px 0 var(--border);
       /* width / transform 은 fitWorksheetToScreen()에서 주입 */
     }
@@ -453,7 +460,8 @@
       /* [태블릿 가로모드] 인쇄 시에는 전체화면/scale을 해제해 A4로 정상 출력 */
       body.tablet-active { overflow: visible !important; height: auto !important; }
       body.tablet-active #preview-section { position: static !important; height: auto !important; padding: 0 !important; }
-      body.tablet-active #worksheet { transform: none !important; width: auto !important; box-shadow: none !important; }
+      body.tablet-active #worksheet-scale-wrapper { width: auto !important; height: auto !important; position: static !important; }
+      body.tablet-active #worksheet { transform: none !important; width: auto !important; box-shadow: none !important; position: static !important; }
       @page { size: A4 portrait; margin: 0; }
     }
   </style>
@@ -638,7 +646,10 @@
 
     <!-- [태블릿 가로모드]: 워크시트를 화면 중앙에 두고 scale로 키우기 위한 래퍼 -->
     <div id="worksheet-scale-area">
-      <div id="worksheet"></div>
+      <!-- wrapper는 JS가 scale된 실제 크기를 주입해 레이아웃 박스와 시각 크기를 일치시킨다 -->
+      <div id="worksheet-scale-wrapper">
+        <div id="worksheet"></div>
+      </div>
     </div>
   </div>
 
@@ -1066,41 +1077,65 @@
        - scale = min(가용너비/자연너비, 가용높이/자연높이) → 제약되는 쪽에 맞춰 최대 확대
        - transform: scale은 캔버스 좌표 변환(getBoundingClientRect 기반)과 호환됨
     ───────────────────────────────────────── */
+    let _fitRetry = 0;
     function fitWorksheetToScreen() {
       const ws   = document.getElementById('worksheet');
+      const wrap = document.getElementById('worksheet-scale-wrapper');
       const area = document.getElementById('worksheet-scale-area');
-      if (!ws || !area) return;
+      if (!ws || !wrap || !area) return;
 
       // 태블릿 모드가 아니면 원래 상태로 초기화
       if (!tabletActive) {
         ws.style.transform = '';
         ws.style.width = '';
+        wrap.style.width = '';
+        wrap.style.height = '';
+        _fitRetry = 0;
         return;
       }
 
       const availW = area.clientWidth;
       const availH = area.clientHeight;
-      if (!availW || !availH) return;
 
-      // 측정을 위해 변환 제거 + 기준 너비 부여
+      // 측정을 위해 변환 제거 + 래퍼 크기 해제 + 기준 너비 부여
       ws.style.transform = 'none';
+      wrap.style.width = '';
+      wrap.style.height = '';
       const hasGrid = !!ws.querySelector('.ws-grid'); // 모드 1·2 여부
-      if (hasGrid) {
-        // 정사각 그리드(1fr)가 정상 해상되도록 가용 너비를 기준 너비로 부여
-        ws.style.width = availW + 'px';
-      } else {
-        // 모드 3: 콘텐츠 폭에 맞춤
-        ws.style.width = 'fit-content';
+      if (availW) {
+        if (hasGrid) {
+          // 정사각 그리드(1fr)가 정상 해상되도록 가용 너비를 기준 너비로 부여
+          ws.style.width = availW + 'px';
+        } else {
+          // 모드 3: 콘텐츠 폭에 맞춤
+          ws.style.width = 'fit-content';
+        }
       }
 
       // 자연 크기 측정
       const naturalW = ws.offsetWidth;
       const naturalH = ws.offsetHeight;
-      if (!naturalW || !naturalH) return;
+
+      // 레이아웃이 아직 안정되지 않은 경우(특히 샌드박스 iframe 미리보기에서
+      // 영역 크기가 일시적으로 0으로 잡히는 경우) 잠시 후 다시 측정한다.
+      if (!availW || !availH || !naturalW || !naturalH) {
+        if (_fitRetry < 30) {
+          _fitRetry++;
+          setTimeout(fitWorksheetToScreen, 60);
+        }
+        return;
+      }
+      _fitRetry = 0;
 
       // 가로/세로 모두 들어가도록 비율 계산 (제약되는 쪽에 맞춰 최대 크기)
       const scale = Math.min(availW / naturalW, availH / naturalH);
       ws.style.transform = `scale(${scale})`;
+
+      // 핵심: 래퍼가 'scale된 실제 크기'를 차지하도록 해서
+      // transform(시각 크기)과 레이아웃 박스를 일치시킨다.
+      // → flex 중앙정렬이 정상 작동하여 워크시트가 화면 중앙에 꽉 차게 배치됨.
+      wrap.style.width  = (naturalW * scale) + 'px';
+      wrap.style.height = (naturalH * scale) + 'px';
     }
 
     /* ═══════════════════════════════════════════════
@@ -1258,11 +1293,12 @@
       document.getElementById('btn-tablet').textContent = tabletActive ? '🖥️ 태블릿 모드 끄기' : '✏️ 태블릿 모드';
 
       if (tabletActive) {
-        // 전체화면 레이아웃이 적용된 뒤 크기를 계산해야 하므로 다음 프레임에서 실행
-        requestAnimationFrame(() => {
+        // 전체화면 레이아웃(fixed/inset)이 적용·반영된 뒤 크기를 계산해야 하므로
+        // 두 프레임 뒤에 실행하여 레이아웃이 확실히 안정된 상태에서 측정한다.
+        requestAnimationFrame(() => requestAnimationFrame(() => {
           fitWorksheetToScreen();      // 화면에 꽉 차게 scale 주입
           attachCanvasesToCells();     // 확정된 셀 크기에 맞춰 캔버스 부착
-        });
+        }));
       } else {
         fitWorksheetToScreen();        // transform/width 초기화
         // 모드 끄면 지우개 상태 초기화
