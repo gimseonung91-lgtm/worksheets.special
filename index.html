@@ -261,6 +261,142 @@
     /* 나머지 행은 빈 칸 */
     .vocab-write-cell.blank { color: transparent; }
 
+    /* ── 태블릿 모드 툴바 ── */
+    .tablet-toolbar {
+      display: none;
+      align-items: center; gap: 12px; flex-wrap: wrap;
+      background: #fff8e7; border: 2.5px solid var(--border);
+      border-radius: 10px; padding: 12px 18px; margin-bottom: 14px;
+      box-shadow: 3px 3px 0 var(--border);
+    }
+    .tablet-toolbar.active { display: flex; }
+    .toolbar-label {
+      font-size: 13px; font-weight: 800; color: #555; margin-right: 4px;
+    }
+    .toolbar-colors { display: flex; gap: 7px; align-items: center; }
+    .color-dot {
+      width: 26px; height: 26px; border-radius: 50%;
+      border: 3px solid transparent; cursor: pointer;
+      transition: transform 0.15s, border-color 0.15s;
+    }
+    .color-dot:hover { transform: scale(1.2); }
+    .color-dot.selected { border-color: var(--border); transform: scale(1.25); box-shadow: 0 0 0 2px #fff, 0 0 0 4px var(--border); }
+    .toolbar-sizes { display: flex; gap: 7px; align-items: center; }
+    .size-dot {
+      border-radius: 50%; background: #333; cursor: pointer;
+      transition: transform 0.15s, box-shadow 0.15s;
+      flex-shrink: 0;
+    }
+    .size-dot.selected { box-shadow: 0 0 0 2px #fff, 0 0 0 4px var(--border); }
+    .size-dot:hover { transform: scale(1.2); }
+    .toolbar-sep { width: 1px; height: 30px; background: #ddd; }
+    .btn-toolbar {
+      padding: 7px 14px; border: 2px solid var(--border); border-radius: 8px;
+      font-size: 13px; font-weight: 800; font-family: 'Nanum Gothic', sans-serif;
+      cursor: pointer; transition: background 0.15s, transform 0.1s;
+      background: #fff; color: #333;
+    }
+    .btn-toolbar:hover { background: #f0f0f0; transform: translateY(-1px); }
+    .btn-toolbar.danger { border-color: var(--red); color: var(--red); }
+    .btn-toolbar.danger:hover { background: #fff0ec; }
+
+    /* 태블릿 모드 토글 버튼 */
+    .btn-tablet {
+      padding: 10px 20px; background: #fff8e7; color: #b07800;
+      border: 2.5px solid var(--border); border-radius: 8px;
+      font-size: 14px; font-weight: 800; font-family: 'Nanum Gothic', sans-serif;
+      cursor: pointer; box-shadow: 3px 3px 0 var(--border);
+      transition: transform 0.1s, box-shadow 0.1s, background 0.15s;
+    }
+    .btn-tablet:hover { transform: translate(-1px,-1px); box-shadow: 4px 4px 0 var(--border); }
+    .btn-tablet.active { background: var(--yellow); color: #7a5500; }
+
+    /* 각 셀 위에 겹쳐지는 캔버스 */
+    .ws-cell, .vocab-write-cell {
+      position: relative;
+    }
+    .cell-canvas {
+      position: absolute;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      border-radius: 0;
+      touch-action: none;
+      cursor: crosshair;
+      display: none; /* 기본 숨김 */
+    }
+    body.tablet-active .cell-canvas { display: block; }
+    body.tablet-active .ws-cell { cursor: none; }
+    body.tablet-active .vocab-write-cell { cursor: none; }
+
+    /* ── 필기 가이드 피드백 ── */
+
+    /* 잘 씀: 파란 배경 */
+    .ws-cell.cell-good,
+    .vocab-write-cell.cell-good {
+      background: #dbeeff !important;
+      transition: background 0.5s ease;
+    }
+    /* 이탈: 빨간 테두리 경고 (일시적) */
+    .ws-cell.cell-warn,
+    .vocab-write-cell.cell-warn {
+      background: #fff0ec !important;
+      transition: background 0.3s ease;
+    }
+
+    /* 가이드 토스트 메시지 */
+    #guide-toast {
+      position: fixed;
+      bottom: 40px; left: 50%;
+      transform: translateX(-50%) translateY(20px);
+      background: #d63030; color: #fff;
+      font-family: 'Nanum Gothic', sans-serif;
+      font-size: 17px; font-weight: 800;
+      padding: 14px 30px; border-radius: 40px;
+      border: 2.5px solid #9a0000;
+      box-shadow: 0 6px 24px rgba(0,0,0,0.22);
+      opacity: 0; pointer-events: none;
+      transition: opacity 0.3s ease, transform 0.3s ease;
+      z-index: 9999;
+      white-space: nowrap;
+    }
+    #guide-toast.show {
+      opacity: 1;
+      transform: translateX(-50%) translateY(0);
+    }
+
+    .btn-toolbar.eraser-active {
+      background: #fff3cd; border-color: #e67c00; color: #b05000;
+      box-shadow: 2px 2px 0 #e67c00;
+    }
+
+    /* 전체 지우기 확인 오버레이 */
+    #clear-confirm-overlay {
+      display: none; position: fixed; inset: 0;
+      background: rgba(0,0,0,0.45); z-index: 10000;
+      align-items: center; justify-content: center;
+    }
+    #clear-confirm-overlay.show { display: flex; }
+    #clear-confirm-box {
+      background: #fff; border: 2.5px solid var(--border);
+      border-radius: 14px; padding: 28px 32px; text-align: center;
+      box-shadow: 6px 6px 0 var(--border); max-width: 320px; width: 90%;
+    }
+    #clear-confirm-box .confirm-icon { font-size: 40px; margin-bottom: 10px; }
+    #clear-confirm-box p {
+      font-size: 16px; font-weight: 800; color: #222;
+      line-height: 1.6; margin-bottom: 20px;
+    }
+    #clear-confirm-box .confirm-btns { display: flex; gap: 10px; justify-content: center; }
+    #clear-confirm-box .confirm-btns button {
+      flex: 1; padding: 11px 0; border-radius: 8px;
+      font-size: 14px; font-weight: 800; font-family: 'Nanum Gothic', sans-serif;
+      cursor: pointer; border: 2.5px solid var(--border);
+      transition: transform 0.1s, box-shadow 0.1s;
+    }
+    #clear-confirm-box .confirm-btns button:active { transform: translate(1px,1px); }
+    .confirm-ok  { background: var(--red);   color: #fff; box-shadow: 3px 3px 0 var(--border); }
+    .confirm-no  { background: #f0f0f0; color: #333; box-shadow: 3px 3px 0 var(--border); }
+
     /* ── 인쇄 ── */
     @media print {
       body { background: #fff; padding: 0; display: block; }
@@ -277,11 +413,28 @@
       .vocab-word-label { font-size: 18pt; }
       .btn-reload-img { display: none !important; }
       .img-controls   { display: none !important; }
+      .cell-canvas { display: none !important; }
+      .tablet-toolbar, .btn-tablet { display: none !important; }
       @page { size: A4; margin: 8mm; }
     }
   </style>
 </head>
 <body>
+
+  <!-- 가이드 토스트 -->
+  <div id="guide-toast">✋ 천천히 다시 써보세요!</div>
+
+  <!-- 전체 지우기 확인 팝업 -->
+  <div id="clear-confirm-overlay">
+    <div id="clear-confirm-box">
+      <div class="confirm-icon">🗑️</div>
+      <p>모든 칸의 필기를<br>전부 지울까요?</p>
+      <div class="confirm-btns">
+        <button class="confirm-ok" onclick="confirmClearAll()">지우기</button>
+        <button class="confirm-no" onclick="closeClearConfirm()">취소</button>
+      </div>
+    </div>
+  </div>
 
   <header>
     <div class="badge">✏️ 특수학급 & 초등 저학년용</div>
@@ -385,8 +538,38 @@
   <div id="preview-section">
     <div class="preview-actions">
       <h2>📄 워크시트 미리보기</h2>
-      <button class="btn-print" onclick="window.print()">🖨️ 인쇄하기</button>
+      <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;">
+        <button class="btn-tablet" id="btn-tablet" onclick="toggleTabletMode()">✏️ 태블릿 모드</button>
+        <button class="btn-print" onclick="window.print()">🖨️ 인쇄하기</button>
+      </div>
     </div>
+
+    <!-- 태블릿 툴바 -->
+    <div class="tablet-toolbar" id="tablet-toolbar">
+      <span class="toolbar-label">🎨 색상</span>
+      <div class="toolbar-colors" id="toolbar-colors">
+        <div class="color-dot selected" style="background:#111" data-color="#111" onclick="setDrawColor(this)"></div>
+        <div class="color-dot" style="background:#2563a0" data-color="#2563a0" onclick="setDrawColor(this)"></div>
+        <div class="color-dot" style="background:#d63030" data-color="#d63030" onclick="setDrawColor(this)"></div>
+        <div class="color-dot" style="background:#2a9d3a" data-color="#2a9d3a" onclick="setDrawColor(this)"></div>
+        <div class="color-dot" style="background:#9c27b0" data-color="#9c27b0" onclick="setDrawColor(this)"></div>
+        <div class="color-dot" style="background:#e67c00" data-color="#e67c00" onclick="setDrawColor(this)"></div>
+      </div>
+      <div class="toolbar-sep"></div>
+      <span class="toolbar-label">✒️ 굵기</span>
+      <div class="toolbar-sizes" id="toolbar-sizes">
+        <div class="size-dot" style="width:8px;height:8px" data-size="3" onclick="setDrawSize(this)"></div>
+        <div class="size-dot selected" style="width:14px;height:14px" data-size="6" onclick="setDrawSize(this)"></div>
+        <div class="size-dot" style="width:20px;height:20px" data-size="11" onclick="setDrawSize(this)"></div>
+        <div class="size-dot" style="width:26px;height:26px" data-size="18" onclick="setDrawSize(this)"></div>
+      </div>
+      <div class="toolbar-sep"></div>
+      <button class="btn-toolbar" id="btn-eraser" onclick="toggleEraser()">🧹 지우개</button>
+      <div class="toolbar-sep"></div>
+      <button class="btn-toolbar" onclick="undoLastStroke()">↩️ 되돌리기</button>
+      <button class="btn-toolbar danger" id="btn-clear-all" onclick="clearAllCanvas()">🗑️ 전체 지우기</button>
+    </div>
+
     <div id="worksheet"></div>
   </div>
 
@@ -730,7 +913,378 @@
       const s = document.getElementById('preview-section');
       s.style.display = 'block';
       s.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      if (tabletActive) setTimeout(attachCanvasesToCells, 80);
     }
+
+    /* ═══════════════════════════════════════════════
+       태블릿 모드 — 셀마다 Canvas 올리기
+       ─ 터치/마우스/스타일러스 모두 지원
+       ─ 각 셀 canvas는 독립적으로 관리
+       ─ 실행 취소(undo)는 스트로크 단위로 저장
+       ─ 획 평가: 이탈율 → 경고 토스트 / 잘 씀 → 파란 배경
+    ═══════════════════════════════════════════════ */
+    let tabletActive  = false;
+    let drawColor     = '#111';
+    let drawSize      = 6;
+    let eraserMode    = false;   // 지우개 모드
+
+    // strokeHistory: { canvas, imageData, cell }[] — 되돌리기용
+    const strokeHistory = [];
+
+    /* ─── 토스트 메시지 ─── */
+    let toastTimer = null;
+    function showToast(msg) {
+      const t = document.getElementById('guide-toast');
+      t.textContent = msg;
+      t.classList.add('show');
+      clearTimeout(toastTimer);
+      toastTimer = setTimeout(() => t.classList.remove('show'), 2200);
+    }
+
+    /* ─── 힌트 글자 픽셀 마스크 추출 ───
+       셀의 텍스트 콘텐츠를 오프스크린 캔버스에 렌더링해
+       "글자가 차지하는 영역(마스크)" 을 만든다.
+       hint 칸만 사용 (trace-char / hint 클래스)
+    */
+    function buildHintMask(cell, w, h) {
+      const text = cell.textContent.trim();
+      if (!text) return null;
+
+      const off = document.createElement('canvas');
+      off.width = w; off.height = h;
+      const ctx = off.getContext('2d');
+
+      // 셀의 실제 폰트 크기 읽기
+      const cs = window.getComputedStyle(cell);
+      const fs = parseFloat(cs.fontSize) || (w * 0.72);
+      ctx.font = `700 ${fs}px 'Nanum Gothic', sans-serif`;
+      ctx.textAlign    = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillStyle    = '#000';
+      ctx.fillText(text, w / 2, h / 2);
+
+      return ctx.getImageData(0, 0, w, h);
+    }
+
+    /* ─── 획 평가 ───
+       스트로크가 끝난 뒤:
+       1) 캔버스에서 현재 필기 픽셀 추출
+       2) 힌트 마스크와 겹치는 비율 계산
+          - 필기 픽셀 중 마스크 밖에 있는 것 = 이탈 픽셀
+       3) 이탈율 > WARN_RATIO → 경고 토스트 + 빨간 배경
+          이탈율 ≤ GOOD_RATIO → 잘 씀 → 파란 배경
+
+       힌트 없는 칸(빈 칸)은 이탈 체크 없이 파란 배경만.
+    */
+    const WARN_RATIO = 0.38;  // 이탈 픽셀이 38% 이상이면 경고
+    const GOOD_RATIO = 0.22;  // 이탈 픽셀이 22% 이하면 칭찬
+
+    function evaluateStroke(canvas, cell) {
+      const w = canvas.width, h = canvas.height;
+      const ctx = canvas.getContext('2d');
+      const drawn = ctx.getImageData(0, 0, w, h);
+
+      // 필기 픽셀 (alpha > 30) 수집
+      const drawnPixels = [];
+      for (let i = 3; i < drawn.data.length; i += 4) {
+        if (drawn.data[i] > 30) drawnPixels.push(i);
+      }
+      if (drawnPixels.length < 20) return; // 너무 짧은 터치는 무시
+
+      const isHintCell = cell.classList.contains('trace-char') || cell.classList.contains('hint');
+
+      if (!isHintCell) {
+        // 힌트 없는 빈 칸: 무조건 파란 배경 (쓰기만 해도 칭찬)
+        markGood(cell);
+        return;
+      }
+
+      // 힌트 마스크 생성 (셀 크기 기준 — 마스크 범위를 넉넉히 팽창)
+      const mask = buildHintMask(cell, w, h);
+      if (!mask) { markGood(cell); return; }
+
+      // 마스크를 팽창(dilate)해서 허용 범위 넓힘 (획 굵기 보정)
+      const dilated = dilateMask(mask, w, h, Math.max(drawSize * 2.2, 18));
+
+      // 이탈 픽셀 카운트
+      let outside = 0;
+      for (const i of drawnPixels) {
+        const pi = Math.floor(i / 4) * 4; // alpha → base index
+        if (dilated.data[pi + 3] < 128) outside++;
+      }
+
+      const ratio = outside / drawnPixels.length;
+
+      if (ratio > WARN_RATIO) {
+        markWarn(cell);
+        showToast('✋ 천천히 다시 써보세요!');
+      } else if (ratio <= GOOD_RATIO) {
+        markGood(cell);
+      }
+      // 중간 범위(22%~38%)는 판정 보류 — 배경 변화 없음
+    }
+
+    /* ─── 마스크 팽창 (Morphological Dilation) ───
+       글자 윤곽 주변 radius 픽셀을 허용 영역으로 확장
+    */
+    function dilateMask(src, w, h, radius) {
+      const r = Math.ceil(radius);
+      const dst = new ImageData(w, h);
+      const srcA = src.data;
+      const dstA = dst.data;
+
+      for (let y = 0; y < h; y++) {
+        for (let x = 0; x < w; x++) {
+          let found = false;
+          outer: for (let dy = -r; dy <= r && !found; dy++) {
+            for (let dx = -r; dx <= r && !found; dx++) {
+              if (dx*dx + dy*dy > r*r) continue;
+              const nx = x + dx, ny = y + dy;
+              if (nx < 0 || nx >= w || ny < 0 || ny >= h) continue;
+              if (srcA[(ny * w + nx) * 4 + 3] > 128) found = true;
+            }
+          }
+          if (found) { dstA[(y * w + x) * 4 + 3] = 255; }
+        }
+      }
+      return dst;
+    }
+
+    function markGood(cell) {
+      cell.classList.remove('cell-warn');
+      cell.classList.add('cell-good');
+    }
+    function markWarn(cell) {
+      cell.classList.remove('cell-good');
+      cell.classList.add('cell-warn');
+      // 경고 배경은 1.5초 후 원래대로
+      setTimeout(() => cell.classList.remove('cell-warn'), 1500);
+    }
+
+    /* ── 태블릿 모드 ON/OFF ── */
+    function toggleTabletMode() {
+      tabletActive = !tabletActive;
+      document.body.classList.toggle('tablet-active', tabletActive);
+      document.getElementById('btn-tablet').classList.toggle('active', tabletActive);
+      document.getElementById('tablet-toolbar').classList.toggle('active', tabletActive);
+
+      if (tabletActive) {
+        attachCanvasesToCells();
+      } else {
+        // 모드 끄면 지우개 상태 초기화
+        if (eraserMode) { eraserMode = false; }
+        const btn = document.getElementById('btn-eraser');
+        btn.classList.remove('eraser-active');
+        btn.textContent = '🧹 지우개';
+      }
+    }
+
+    /* ── 워크시트가 다시 생성될 때 캔버스 재부착 ── */
+    function attachCanvasesToCells() {
+      // 기존 캔버스 모두 제거 + cell 상태 초기화
+      document.querySelectorAll('.cell-canvas').forEach(c => c.remove());
+      document.querySelectorAll('.ws-cell, .vocab-write-cell').forEach(c => {
+        c.classList.remove('cell-good', 'cell-warn');
+      });
+      strokeHistory.length = 0;
+
+      const cells = document.querySelectorAll('.ws-cell, .vocab-write-cell');
+      cells.forEach(cell => {
+        const canvas = document.createElement('canvas');
+        canvas.className = 'cell-canvas';
+        cell.appendChild(canvas);
+        resizeCanvas(canvas);
+        initDrawing(canvas, cell);
+      });
+
+      // ResizeObserver로 셀 크기 변화 감지 → 캔버스 리사이즈
+      const ro = new ResizeObserver(() => {
+        document.querySelectorAll('.cell-canvas').forEach(c => resizeCanvas(c));
+      });
+      cells.forEach(cell => ro.observe(cell));
+    }
+
+    /* ── 캔버스 크기를 부모 셀에 맞춤 ── */
+    function resizeCanvas(canvas) {
+      const cell = canvas.parentElement;
+      const w = cell.offsetWidth;
+      const h = cell.offsetHeight;
+      if (!w || !h) return;
+      let saved = null;
+      if (canvas.width && canvas.height) {
+        saved = canvas.toDataURL();
+      }
+      canvas.width  = w;
+      canvas.height = h;
+      if (saved) {
+        const img = new Image();
+        img.onload = () => canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+        img.src = saved;
+      }
+    }
+
+    /* ── 그리기 이벤트 초기화 ── */
+    function initDrawing(canvas, cell) {
+      let isDrawing = false;
+      let lastX = 0, lastY = 0;
+      let strokeStart = null;
+
+      function getPos(e) {
+        const rect = canvas.getBoundingClientRect();
+        const src  = e.touches ? e.touches[0] : e;
+        return {
+          x: (src.clientX - rect.left) * (canvas.width  / rect.width),
+          y: (src.clientY - rect.top)  * (canvas.height / rect.height),
+        };
+      }
+
+      function startDraw(e) {
+        e.preventDefault();
+        isDrawing = true;
+        const ctx = canvas.getContext('2d');
+        strokeStart = ctx.getImageData(0, 0, canvas.width, canvas.height);
+        const pos = getPos(e);
+        lastX = pos.x; lastY = pos.y;
+        if (eraserMode) {
+          // 지우개: destination-out으로 투명하게 지움
+          ctx.save();
+          ctx.globalCompositeOperation = 'destination-out';
+          ctx.beginPath();
+          ctx.arc(lastX, lastY, eraserSize() / 2, 0, Math.PI * 2);
+          ctx.fillStyle = 'rgba(0,0,0,1)';
+          ctx.fill();
+          ctx.restore();
+        } else {
+          ctx.beginPath();
+          ctx.arc(lastX, lastY, drawSize / 2, 0, Math.PI * 2);
+          ctx.fillStyle = drawColor;
+          ctx.fill();
+        }
+      }
+
+      function draw(e) {
+        if (!isDrawing) return;
+        e.preventDefault();
+        const ctx = canvas.getContext('2d');
+        const pos = getPos(e);
+        if (eraserMode) {
+          ctx.save();
+          ctx.globalCompositeOperation = 'destination-out';
+          ctx.beginPath();
+          ctx.moveTo(lastX, lastY);
+          ctx.lineTo(pos.x, pos.y);
+          ctx.strokeStyle = 'rgba(0,0,0,1)';
+          ctx.lineWidth   = eraserSize();
+          ctx.lineCap     = 'round';
+          ctx.lineJoin    = 'round';
+          ctx.stroke();
+          ctx.restore();
+        } else {
+          ctx.beginPath();
+          ctx.moveTo(lastX, lastY);
+          ctx.lineTo(pos.x, pos.y);
+          ctx.strokeStyle = drawColor;
+          ctx.lineWidth   = drawSize;
+          ctx.lineCap     = 'round';
+          ctx.lineJoin    = 'round';
+          ctx.stroke();
+        }
+        lastX = pos.x; lastY = pos.y;
+      }
+
+      function endDraw(e) {
+        if (!isDrawing) return;
+        isDrawing = false;
+        if (strokeStart) {
+          strokeHistory.push({ canvas, cell, imageData: strokeStart });
+          strokeStart = null;
+          if (strokeHistory.length > 50) strokeHistory.shift();
+        }
+        // 지우개 모드일 때는 평가 없이 good 상태 해제만
+        if (eraserMode) {
+          cell.classList.remove('cell-good', 'cell-warn');
+        } else {
+          evaluateStroke(canvas, cell);
+        }
+      }
+
+      canvas.addEventListener('mousedown',  startDraw);
+      canvas.addEventListener('mousemove',  draw);
+      canvas.addEventListener('mouseup',    endDraw);
+      canvas.addEventListener('mouseleave', endDraw);
+      canvas.addEventListener('touchstart', startDraw, { passive: false });
+      canvas.addEventListener('touchmove',  draw,      { passive: false });
+      canvas.addEventListener('touchend',   endDraw);
+    }
+
+    /* ── 색상 변경 ── */
+    function setDrawColor(el) {
+      drawColor = el.dataset.color;
+      document.querySelectorAll('.color-dot').forEach(d => d.classList.remove('selected'));
+      el.classList.add('selected');
+      // 색상 선택하면 지우개 모드 해제
+      if (eraserMode) toggleEraser();
+    }
+
+    /* ── 굵기 변경 ── */
+    function setDrawSize(el) {
+      drawSize = parseInt(el.dataset.size);
+      document.querySelectorAll('.size-dot').forEach(d => d.classList.remove('selected'));
+      el.classList.add('selected');
+    }
+
+    /* ── 지우개 크기: drawSize의 3배 (넉넉하게) ── */
+    function eraserSize() { return Math.max(drawSize * 3, 20); }
+
+    /* ── 지우개 ON/OFF ── */
+    function toggleEraser() {
+      eraserMode = !eraserMode;
+      const btn = document.getElementById('btn-eraser');
+      if (eraserMode) {
+        btn.classList.add('eraser-active');
+        btn.textContent = '🧹 지우개 ON';
+        // 커서를 지우개 모양으로
+        document.querySelectorAll('.cell-canvas').forEach(c => {
+          c.style.cursor = 'cell';
+        });
+      } else {
+        btn.classList.remove('eraser-active');
+        btn.textContent = '🧹 지우개';
+        document.querySelectorAll('.cell-canvas').forEach(c => {
+          c.style.cursor = 'crosshair';
+        });
+      }
+    }
+
+    /* ── 전체 지우기: 커스텀 팝업 사용 (confirm 대신) ── */
+    function clearAllCanvas() {
+      document.getElementById('clear-confirm-overlay').classList.add('show');
+    }
+    function closeClearConfirm() {
+      document.getElementById('clear-confirm-overlay').classList.remove('show');
+    }
+    function confirmClearAll() {
+      closeClearConfirm();
+      document.querySelectorAll('.cell-canvas').forEach(c => {
+        c.getContext('2d').clearRect(0, 0, c.width, c.height);
+      });
+      document.querySelectorAll('.ws-cell, .vocab-write-cell').forEach(c => {
+        c.classList.remove('cell-good', 'cell-warn');
+      });
+      strokeHistory.length = 0;
+    }
+
+    /* ── 되돌리기 ── */
+    function undoLastStroke() {
+      if (!strokeHistory.length) return;
+      const { canvas, cell, imageData } = strokeHistory.pop();
+      canvas.getContext('2d').putImageData(imageData, 0, 0);
+      cell.classList.remove('cell-good', 'cell-warn');
+    }
+
+    /* ── 워크시트 재생성 시 캔버스 재부착 ── */
+    // generateWritingWorksheet / generateVocabWorksheet 호출 후 자동 재부착은
+    // showPreview 안에서 처리 (아래 showPreview 재정의)
 
     document.getElementById('sentence-input').addEventListener('keydown', e => {
       if (e.key === 'Enter') generateWorksheet();
