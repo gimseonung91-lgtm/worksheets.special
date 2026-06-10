@@ -530,6 +530,33 @@
       </div>
     </div>
 
+    <!-- 모드 3용 쓰기 방식 선택 (기본 숨김) -->
+    <div class="mode-group" id="vocab-write-mode-group" style="display:none;">
+      <label class="group-label">✏️ 쓰기 방식 선택</label>
+      <div class="mode-options">
+        <label class="mode-card">
+          <input type="radio" name="vocabwritemode" value="trace" checked />
+          <div class="card-inner">
+            <span class="mode-icon">🖊️</span>
+            <div class="mode-text">
+              <strong>따라 쓰기</strong>
+              <span>모든 칸에 회색 힌트<br>글자를 따라 써요!</span>
+            </div>
+          </div>
+        </label>
+        <label class="mode-card">
+          <input type="radio" name="vocabwritemode" value="self" />
+          <div class="card-inner">
+            <span class="mode-icon">⭐</span>
+            <div class="mode-text">
+              <strong>스스로 쓰기</strong>
+              <span>빈 칸에 스스로<br>단어를 써 봐요!</span>
+            </div>
+          </div>
+        </label>
+      </div>
+    </div>
+
     <button class="btn-generate" id="btn-generate" onclick="generateWorksheet()">
       🎨 워크시트 만들기
     </button>
@@ -581,6 +608,7 @@
       const mode = document.querySelector('input[name="mode"]:checked').value;
       const sg12  = document.getElementById('size-group-12');
       const sg3   = document.getElementById('size-group-3');
+      const vwm   = document.getElementById('vocab-write-mode-group');
       const label = document.getElementById('input-label');
       const input = document.getElementById('sentence-input');
       const btn   = document.getElementById('btn-generate');
@@ -588,6 +616,7 @@
       if (mode === '3') {
         sg12.style.display  = 'none';
         sg3.style.display   = 'block';
+        vwm.style.display   = 'block';
         label.textContent   = '🖼️ 학습할 단어 입력 (단어 하나)';
         input.placeholder   = '예: 사과, 광합성, 고양이';
         input.maxLength     = 10;
@@ -596,6 +625,7 @@
       } else {
         sg12.style.display  = 'block';
         sg3.style.display   = 'none';
+        vwm.style.display   = 'none';
         label.textContent   = '📝 연습할 문장 입력';
         input.placeholder   = '예: 지구가 점점 더워져요';
         const cols = parseInt(document.querySelector('input[name="gridsize"]:checked').value);
@@ -694,11 +724,11 @@
       const word   = document.getElementById('sentence-input').value.trim().replace(/\s/g, '');
       if (!word) { alert('학습할 단어를 입력해 주세요! 😊'); return; }
 
-      const chars  = word.split('');
-      const cols   = chars.length;                    // 열 수 = 글자 수
-      const repeat = parseInt(document.querySelector('input[name="vocabrepeat"]:checked').value); // 행 수
+      const chars      = word.split('');
+      const cols       = chars.length;
+      const repeat     = parseInt(document.querySelector('input[name="vocabrepeat"]:checked').value);
+      const writeMode  = document.querySelector('input[name="vocabwritemode"]:checked').value; // 'trace' | 'self'
 
-      /* 글자 크기: 열 수(=글자 수)가 많을수록 작게 */
       const fontByLen = {
         1: '72px', 2: '60px', 3: '48px', 4: '38px',
         5: '30px', 6: '24px', 7: '20px', 8: '17px',
@@ -712,7 +742,8 @@
       /* 헤더 */
       const header = document.createElement('div');
       header.className = 'ws-header';
-      header.innerHTML = `<span class="ws-title">🖼️ 단어 학습: ${word}</span>`;
+      const modeLabel = writeMode === 'trace' ? '따라 쓰기' : '스스로 쓰기';
+      header.innerHTML = `<span class="ws-title">🖼️ 단어 학습: ${word} <span style="font-size:14px;font-weight:700;color:#888;margin-left:8px;">${modeLabel}</span></span>`;
       worksheet.appendChild(header);
 
       /* 좌우 레이아웃 */
@@ -723,28 +754,23 @@
       const imageBox = document.createElement('div');
       imageBox.className = 'vocab-image-box';
 
-      // 이미지 표시 영역
       const imgWrap = document.createElement('div');
       imgWrap.className = 'vocab-img-wrap';
       imgWrap.id = 'vocab-img-wrap';
       imgWrap.innerHTML = `<div class="img-placeholder"><div class="spinner"></div><span>이미지 검색 중...</span></div>`;
 
-      // 단어 라벨
       const wordLabel = document.createElement('div');
       wordLabel.className = 'vocab-word-label';
       wordLabel.textContent = word;
 
-      // ── 이미지 조작 버튼들 (인쇄 시 숨김) ──
       const imgControls = document.createElement('div');
       imgControls.className = 'img-controls no-print';
 
-      // 다른 이미지 자동 검색
       const reloadBtn = document.createElement('button');
       reloadBtn.className = 'btn-reload-img';
       reloadBtn.textContent = '🔄 자동 검색';
       reloadBtn.onclick = () => loadVocabImage(word);
 
-      // 이미지 주소(URL) 직접 입력
       const urlBtn = document.createElement('button');
       urlBtn.className = 'btn-reload-img';
       urlBtn.textContent = '🔗 주소로 넣기';
@@ -753,7 +779,6 @@
         if (url && url.trim()) setImageFromUrl(url.trim());
       };
 
-      // 내 컴퓨터에서 파일 직접 업로드
       const fileInput = document.createElement('input');
       fileInput.type = 'file';
       fileInput.accept = 'image/*';
@@ -781,37 +806,36 @@
       imageBox.appendChild(wordLabel);
       imageBox.appendChild(imgControls);
 
-      /* ── 우측: 반복 쓰기 그리드 ──
-         CSS grid로 구성:
-         - gridTemplateColumns: 글자 수만큼 균등 열
-         - 각 셀 aspect-ratio:1/1 → 정사각형 유지
-         - 1행(index 0~cols-1): 힌트(회색)
-         - 나머지 행: 빈 칸
-      */
+      /* ── 우측: 반복 쓰기 그리드 ── */
       const gridBox = document.createElement('div');
       gridBox.className = 'vocab-grid-box';
 
       const grid = document.createElement('div');
       grid.className = 'vocab-write-grid';
-      grid.style.gridTemplateColumns = `repeat(${cols}, 1fr)`; // 핵심: 글자 수만큼 열
+      grid.style.gridTemplateColumns = `repeat(${cols}, 1fr)`;
 
       const totalCells = cols * repeat;
 
       for (let i = 0; i < totalCells; i++) {
-        const rowIndex = Math.floor(i / cols); // 몇 번째 행인지
-        const colIndex = i % cols;             // 몇 번째 열인지
+        const rowIndex = Math.floor(i / cols);
+        const colIndex = i % cols;
 
         const cell = document.createElement('div');
         cell.className = 'vocab-write-cell';
         cell.style.fontSize = fontSize;
 
-        if (rowIndex === 0) {
-          /* 첫 번째 행: 힌트 글자 (연한 회색) */
+        if (writeMode === 'trace') {
+          /* 따라 쓰기: 모든 행에 회색 힌트 */
           cell.classList.add('hint');
           cell.textContent = chars[colIndex];
         } else {
-          /* 나머지 행: 빈 칸 */
-          cell.classList.add('blank');
+          /* 스스로 쓰기: 첫 행만 힌트, 나머지 빈 칸 */
+          if (rowIndex === 0) {
+            cell.classList.add('hint');
+            cell.textContent = chars[colIndex];
+          } else {
+            cell.classList.add('blank');
+          }
         }
 
         grid.appendChild(cell);
@@ -823,7 +847,7 @@
       worksheet.appendChild(layout);
 
       showPreview();
-      loadVocabImage(word); // 이미지 비동기 로드
+      loadVocabImage(word);
     }
 
     /* ─────────────────────────────────────────
