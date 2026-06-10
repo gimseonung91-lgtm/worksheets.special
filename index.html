@@ -402,30 +402,33 @@
        ─ 입력 패널/헤더를 숨기고 미리보기를 화면 전체로 확장
        ─ 워크시트는 JS(fitWorksheetToScreen)가 scale을 주입해 꽉 차게 키움
     ════════════════════════════════════════════ */
-    body.tablet-active { overflow: hidden; padding: 0; height: 100vh; }
+    body.tablet-active { overflow: hidden; padding: 0; height: 100vh; height: 100dvh; }
     body.tablet-active header,
     body.tablet-active .panel { display: none !important; }
 
     body.tablet-active #preview-section {
       position: fixed; inset: 0;
-      width: 100vw; height: 100vh; max-width: none;
+      width: 100vw; max-width: none;
+      /* 실제로 보이는 높이. JS(setTabletViewportHeight)가 visualViewport 기준
+         px 값을 인라인으로 덮어써 브라우저 UI·시스템 바를 정확히 제외한다.
+         dvh 는 그 전·미지원 브라우저용 폴백. */
+      height: 100vh; height: 100dvh;
       margin: 0; padding: 8px 12px;
+      padding-bottom: max(8px, env(safe-area-inset-bottom));
       background: var(--bg); z-index: 500;
+      overflow: hidden;
       /* showPreview()가 인라인으로 display:block 을 넣으므로 !important 로 flex 강제 */
       display: flex !important; flex-direction: column !important;
     }
     body.tablet-active .preview-actions { margin-bottom: 6px; flex-shrink: 0; }
     body.tablet-active .tablet-toolbar  { margin-bottom: 6px; flex-shrink: 0; }
 
-    /* 남은 공간을 모두 차지하며 워크시트를 가운데 정렬하는 영역 */
+    /* 남은 공간을 모두 차지하는 영역 (모드 3: 가운데 정렬) */
     body.tablet-active #worksheet-scale-area {
       flex: 1 1 auto; min-height: 0;
       display: flex; align-items: center; justify-content: center;
       overflow: hidden;
     }
-    /* 래퍼: JS가 크기를 주입
-       - 모드 3(단어): scale된 실제 크기 → flex 중앙정렬
-       - 모드 1·2(글자): 영역 전체 크기 → 화면 가득 채움 */
     body.tablet-active #worksheet-scale-wrapper {
       position: relative;
       flex-shrink: 0;
@@ -440,30 +443,47 @@
       /* width / transform 은 fitWorksheetToScreen()에서 주입 */
     }
 
-    /* [태블릿·화면 전용] 모드 1·2(글자 쓰기): 제목·여백 없이 그리드가 화면을 빈틈없이 채움.
-       인쇄에는 영향을 주지 않도록 @media screen 안에 둔다. */
+    /* ── 모드 1·2(글자 쓰기) 화면 채움 모드 ──
+       - 영역을 위에서부터 채우고, 화면이 너무 좁으면 세로 스크롤로 하단까지 볼 수 있게 함
+       - body.tablet-grid-fill 클래스는 JS(syncTabletFillClass)가 토글 */
+    body.tablet-active.tablet-grid-fill #worksheet-scale-area {
+      display: flex; flex-direction: column;
+      align-items: stretch; justify-content: flex-start;
+      overflow-y: auto;
+      -webkit-overflow-scrolling: touch;
+    }
+    body.tablet-active.tablet-grid-fill #worksheet-scale-wrapper {
+      position: static;
+      flex: 1 0 auto;
+      display: flex; flex-direction: column;
+      width: 100%; min-height: 0;
+    }
+    /* [화면 전용] 인쇄에는 영향 주지 않도록 @media screen 안에 둔다. */
     @media screen {
-      body.tablet-active #worksheet.grid-fill {
-        position: absolute; inset: 0;
-        width: 100%; height: 100%;
+      body.tablet-active.tablet-grid-fill #worksheet.grid-fill {
+        position: static;
+        flex: 1 0 auto;
+        display: flex; flex-direction: column;
+        width: 100%; min-height: 0;
         margin: 0; padding: 0;
         border-width: 2.5px; border-radius: 0;
         box-shadow: none; transform: none;
-        display: flex; flex-direction: column;
-        background: #fff; overflow: hidden;
+        background: #fff;
       }
       /* 화면 가득 채우기 위해 제목·문장 칩 줄은 숨김 */
-      body.tablet-active #worksheet.grid-fill .ws-header,
-      body.tablet-active #worksheet.grid-fill .ws-sentence-display { display: none !important; }
-      /* 그리드가 워크시트(=화면) 전체를 채우고, 행을 균등(1fr) 분배 */
-      body.tablet-active #worksheet.grid-fill .ws-grid {
-        flex: 1 1 auto; width: 100%; height: 100%; min-height: 0;
+      body.tablet-active.tablet-grid-fill #worksheet.grid-fill .ws-header,
+      body.tablet-active.tablet-grid-fill #worksheet.grid-fill .ws-sentence-display { display: none !important; }
+      /* 그리드: 영역에 맞으면 1fr 로 균등 분배해 가득 채우고,
+         좁으면 행마다 최소 높이(96px)를 유지하며 넘쳐서(스크롤) 하단까지 볼 수 있게 함.
+         flex:1 0 auto + 행 최소높이가 스크롤 폴백을 만든다. */
+      body.tablet-active.tablet-grid-fill #worksheet.grid-fill .ws-grid {
+        flex: 1 0 auto; width: 100%; min-height: 0;
+        grid-template-rows: repeat(var(--ws-rows, 4), minmax(96px, 1fr));
         border-top: 2.5px solid var(--border);
         border-left: 2.5px solid var(--border);
-        grid-template-rows: repeat(var(--ws-rows, 4), 1fr);
       }
-      /* 셀: 정사각 비율 해제하고 트랙을 가득 채움. 글자 크기는 행·열 수에 비례 */
-      body.tablet-active #worksheet.grid-fill .ws-cell {
+      /* 셀: 정사각 비율 해제, 트랙을 가득 채움. 글자 크기는 행·열 수에 비례 */
+      body.tablet-active.tablet-grid-fill #worksheet.grid-fill .ws-cell {
         aspect-ratio: auto; min-width: 0; min-height: 0;
         font-size: min(calc(60vw / var(--ws-cols, 4)),
                        calc(58vh / var(--ws-rows, 4))) !important;
@@ -1118,12 +1138,33 @@
        - scale = min(가용너비/자연너비, 가용높이/자연높이) → 제약되는 쪽에 맞춰 최대 확대
        - transform: scale은 캔버스 좌표 변환(getBoundingClientRect 기반)과 호환됨
     ───────────────────────────────────────── */
+    /* 현재 워크시트가 '화면 채움(글자 그리드)' 모드인지에 따라 body 클래스를 동기화 */
+    function syncTabletFillClass() {
+      const ws = document.getElementById('worksheet');
+      const fill = tabletActive && ws && ws.classList.contains('grid-fill');
+      document.body.classList.toggle('tablet-grid-fill', !!fill);
+    }
+
+    /* 실제로 보이는 화면 높이(브라우저 UI·시스템 바 제외)를 전체화면 컨테이너에 적용.
+       모바일/태블릿의 100vh 가 보이는 영역보다 커서 하단이 잘리는 문제를 막는다. */
+    function setTabletViewportHeight() {
+      const sec = document.getElementById('preview-section');
+      if (!sec) return;
+      if (!tabletActive) { sec.style.height = ''; return; }
+      const vv = window.visualViewport;
+      const h = Math.round(vv ? vv.height : (window.innerHeight || document.documentElement.clientHeight));
+      if (h) sec.style.height = h + 'px';
+    }
+
     let _fitRetry = 0;
     function fitWorksheetToScreen() {
       const ws   = document.getElementById('worksheet');
       const wrap = document.getElementById('worksheet-scale-wrapper');
       const area = document.getElementById('worksheet-scale-area');
       if (!ws || !wrap || !area) return;
+
+      syncTabletFillClass();
+      setTabletViewportHeight();
 
       // 태블릿 모드가 아니면 원래 상태로 초기화
       if (!tabletActive) {
@@ -1135,24 +1176,20 @@
         return;
       }
 
-      const availW = area.clientWidth;
-      const availH = area.clientHeight;
-
-      // ── 모드 1·2(글자 그리드): 화면 전체를 빈틈없이 채움 ──
-      // 래퍼를 영역 크기(availW×availH)로 맞추면, CSS가 워크시트·그리드를
-      // 100%로 채우고 셀들을 1fr로 균등 분배해 화면을 가득 채운다. (scale 불필요)
+      // ── 모드 1·2(글자 그리드): 화면 전체를 채움 (CSS가 처리) ──
+      // 래퍼·워크시트는 CSS에서 100%/min-height로 채우므로 인라인 크기는 비운다.
+      // 화면이 너무 좁으면 행 최소높이(96px) 때문에 넘쳐서 세로 스크롤된다.
       if (ws.classList.contains('grid-fill')) {
         ws.style.transform = '';
         ws.style.width = '';
-        if (!availW || !availH) {
-          if (_fitRetry < 30) { _fitRetry++; setTimeout(fitWorksheetToScreen, 60); }
-          return;
-        }
+        wrap.style.width = '';
+        wrap.style.height = '';
         _fitRetry = 0;
-        wrap.style.width  = availW + 'px';
-        wrap.style.height = availH + 'px';
         return;
       }
+
+      const availW = area.clientWidth;
+      const availH = area.clientHeight;
 
       // ── 모드 3(단어 학습): 콘텐츠 비율을 유지하며 화면에 맞춰 축소(중앙 정렬) ──
       // 측정을 위해 변환 제거 + 래퍼 크기 해제
@@ -1344,15 +1381,21 @@
       // [태블릿 가로모드] 버튼 라벨 토글
       document.getElementById('btn-tablet').textContent = tabletActive ? '🖥️ 태블릿 모드 끄기' : '✏️ 태블릿 모드';
 
+      // 클래스/높이를 먼저 동기화한 뒤 레이아웃을 측정한다.
+      syncTabletFillClass();
+      setTabletViewportHeight();
+
       if (tabletActive) {
         // 전체화면 레이아웃(fixed/inset)이 적용·반영된 뒤 크기를 계산해야 하므로
         // 두 프레임 뒤에 실행하여 레이아웃이 확실히 안정된 상태에서 측정한다.
         requestAnimationFrame(() => requestAnimationFrame(() => {
-          fitWorksheetToScreen();      // 화면에 꽉 차게 scale 주입
+          setTabletViewportHeight();   // 보이는 높이 정확히 적용
+          fitWorksheetToScreen();      // 모드별 레이아웃 적용
           attachCanvasesToCells();     // 확정된 셀 크기에 맞춰 캔버스 부착
         }));
       } else {
         fitWorksheetToScreen();        // transform/width 초기화
+        document.body.classList.remove('tablet-grid-fill');
         // 모드 끄면 지우개 상태 초기화
         if (eraserMode) { eraserMode = false; }
         const btn = document.getElementById('btn-eraser');
@@ -1582,11 +1625,17 @@
       });
     });
 
-    // [태블릿 가로모드] 화면 회전·크기 변경 시 워크시트를 다시 화면에 맞춤
-    window.addEventListener('resize', () => { if (tabletActive) fitWorksheetToScreen(); });
+    // [태블릿 가로모드] 화면 회전·크기 변경 시 보이는 높이를 다시 맞추고 워크시트를 갱신
+    window.addEventListener('resize', () => { if (tabletActive) { setTabletViewportHeight(); fitWorksheetToScreen(); } });
     window.addEventListener('orientationchange', () => {
-      if (tabletActive) setTimeout(fitWorksheetToScreen, 250);
+      if (tabletActive) setTimeout(() => { setTabletViewportHeight(); fitWorksheetToScreen(); }, 250);
     });
+    // 브라우저 주소창이 나타나거나 사라질 때(보이는 높이 변동) 즉시 반영
+    if (window.visualViewport) {
+      const onVV = () => { if (tabletActive) { setTabletViewportHeight(); fitWorksheetToScreen(); } };
+      window.visualViewport.addEventListener('resize', onVV);
+      window.visualViewport.addEventListener('scroll', onVV);
+    }
   </script>
 </body>
 </html>
