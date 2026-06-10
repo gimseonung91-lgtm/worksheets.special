@@ -411,7 +411,8 @@
       width: 100vw; height: 100vh; max-width: none;
       margin: 0; padding: 8px 12px;
       background: var(--bg); z-index: 500;
-      display: flex; flex-direction: column;
+      /* showPreview()가 인라인으로 display:block 을 넣으므로 !important 로 flex 강제 */
+      display: flex !important; flex-direction: column !important;
     }
     body.tablet-active .preview-actions { margin-bottom: 6px; flex-shrink: 0; }
     body.tablet-active .tablet-toolbar  { margin-bottom: 6px; flex-shrink: 0; }
