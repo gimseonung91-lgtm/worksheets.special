@@ -423,18 +423,51 @@
       display: flex; align-items: center; justify-content: center;
       overflow: hidden;
     }
-    /* 래퍼: JS가 scale된 실제 크기(width/height)를 주입 → flex 중앙정렬이 정상 작동 */
+    /* 래퍼: JS가 크기를 주입
+       - 모드 3(단어): scale된 실제 크기 → flex 중앙정렬
+       - 모드 1·2(글자): 영역 전체 크기 → 화면 가득 채움 */
     body.tablet-active #worksheet-scale-wrapper {
       position: relative;
       flex-shrink: 0;
       /* width / height 는 fitWorksheetToScreen()에서 주입 */
     }
-    body.tablet-active #worksheet {
+    /* 모드 3(단어 학습): scale-to-fit, top-left 기준 변환 */
+    body.tablet-active #worksheet:not(.grid-fill) {
       position: absolute; top: 0; left: 0;
       margin: 0;
       transform-origin: top left;
       box-shadow: 4px 4px 0 var(--border);
       /* width / transform 은 fitWorksheetToScreen()에서 주입 */
+    }
+
+    /* [태블릿·화면 전용] 모드 1·2(글자 쓰기): 제목·여백 없이 그리드가 화면을 빈틈없이 채움.
+       인쇄에는 영향을 주지 않도록 @media screen 안에 둔다. */
+    @media screen {
+      body.tablet-active #worksheet.grid-fill {
+        position: absolute; inset: 0;
+        width: 100%; height: 100%;
+        margin: 0; padding: 0;
+        border-width: 2.5px; border-radius: 0;
+        box-shadow: none; transform: none;
+        display: flex; flex-direction: column;
+        background: #fff; overflow: hidden;
+      }
+      /* 화면 가득 채우기 위해 제목·문장 칩 줄은 숨김 */
+      body.tablet-active #worksheet.grid-fill .ws-header,
+      body.tablet-active #worksheet.grid-fill .ws-sentence-display { display: none !important; }
+      /* 그리드가 워크시트(=화면) 전체를 채우고, 행을 균등(1fr) 분배 */
+      body.tablet-active #worksheet.grid-fill .ws-grid {
+        flex: 1 1 auto; width: 100%; height: 100%; min-height: 0;
+        border-top: 2.5px solid var(--border);
+        border-left: 2.5px solid var(--border);
+        grid-template-rows: repeat(var(--ws-rows, 4), 1fr);
+      }
+      /* 셀: 정사각 비율 해제하고 트랙을 가득 채움. 글자 크기는 행·열 수에 비례 */
+      body.tablet-active #worksheet.grid-fill .ws-cell {
+        aspect-ratio: auto; min-width: 0; min-height: 0;
+        font-size: min(calc(60vw / var(--ws-cols, 4)),
+                       calc(58vh / var(--ws-rows, 4))) !important;
+      }
     }
 
     /* ── 인쇄 ── */
@@ -717,6 +750,8 @@
 
       const worksheet = document.getElementById('worksheet');
       worksheet.innerHTML = '';
+      // [태블릿] 글자 그리드는 화면 전체를 채우는 모드
+      worksheet.classList.add('grid-fill');
 
       const header = document.createElement('div');
       header.className = 'ws-header';
@@ -740,6 +775,9 @@
       const grid = document.createElement('div');
       grid.className = 'ws-grid';
       grid.style.gridTemplateColumns = `repeat(${cols}, 1fr)`;
+      // [태블릿] 화면 채우기용: 행·열 수를 CSS 변수로 노출 (정사각 그리드라 행=열=cols)
+      grid.style.setProperty('--ws-rows', cols);
+      grid.style.setProperty('--ws-cols', cols);
 
       // [버그 수정]: 문장 반복 렌더링 로직 적용
       // 모드 1(따라 쓰기): 남는 그리드 칸에 문장을 순환 반복하되,
@@ -861,6 +899,8 @@
       /* ── DOM 생성 ── */
       const worksheet = document.getElementById('worksheet');
       worksheet.innerHTML = '';
+      // [태블릿] 단어 학습은 화면 채우기 모드가 아니라 중앙 맞춤(scale-to-fit)
+      worksheet.classList.remove('grid-fill');
 
       const header = document.createElement('div');
       header.className = 'ws-header';
@@ -1098,19 +1138,30 @@
       const availW = area.clientWidth;
       const availH = area.clientHeight;
 
-      // 측정을 위해 변환 제거 + 래퍼 크기 해제 + 기준 너비 부여
+      // ── 모드 1·2(글자 그리드): 화면 전체를 빈틈없이 채움 ──
+      // 래퍼를 영역 크기(availW×availH)로 맞추면, CSS가 워크시트·그리드를
+      // 100%로 채우고 셀들을 1fr로 균등 분배해 화면을 가득 채운다. (scale 불필요)
+      if (ws.classList.contains('grid-fill')) {
+        ws.style.transform = '';
+        ws.style.width = '';
+        if (!availW || !availH) {
+          if (_fitRetry < 30) { _fitRetry++; setTimeout(fitWorksheetToScreen, 60); }
+          return;
+        }
+        _fitRetry = 0;
+        wrap.style.width  = availW + 'px';
+        wrap.style.height = availH + 'px';
+        return;
+      }
+
+      // ── 모드 3(단어 학습): 콘텐츠 비율을 유지하며 화면에 맞춰 축소(중앙 정렬) ──
+      // 측정을 위해 변환 제거 + 래퍼 크기 해제
       ws.style.transform = 'none';
       wrap.style.width = '';
       wrap.style.height = '';
-      const hasGrid = !!ws.querySelector('.ws-grid'); // 모드 1·2 여부
       if (availW) {
-        if (hasGrid) {
-          // 정사각 그리드(1fr)가 정상 해상되도록 가용 너비를 기준 너비로 부여
-          ws.style.width = availW + 'px';
-        } else {
-          // 모드 3: 콘텐츠 폭에 맞춤
-          ws.style.width = 'fit-content';
-        }
+        // 콘텐츠 폭에 맞춤
+        ws.style.width = 'fit-content';
       }
 
       // 자연 크기 측정
