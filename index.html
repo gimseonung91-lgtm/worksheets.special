@@ -702,6 +702,16 @@
             </div>
           </div>
         </label>
+        <label class="mode-card">
+          <input type="radio" name="vocabwritemode" value="picture" />
+          <div class="card-inner">
+            <span class="mode-icon">🖼️</span>
+            <div class="mode-text">
+              <strong>그림만 보고 쓰기</strong>
+              <span>글자 힌트 없이<br>그림만 보고 써요!</span>
+            </div>
+          </div>
+        </label>
       </div>
     </div>
 
@@ -973,8 +983,12 @@
 
       const header = document.createElement('div');
       header.className = 'ws-header';
-      const modeLabel = writeMode === 'trace' ? '따라 쓰기' : '스스로 쓰기';
-      header.innerHTML = `<span class="ws-title">🖼️ 단어 학습: ${word} <span style="font-size:13px;font-weight:700;color:#888;margin-left:8px;">${modeLabel}</span></span>`;
+      const modeLabel = writeMode === 'trace' ? '따라 쓰기'
+                      : writeMode === 'picture' ? '그림만 보고 쓰기'
+                      : '스스로 쓰기';
+      // 그림만 보고 쓰기: 헤더에도 단어를 노출하지 않아 글자 힌트를 제거한다
+      const headerWord = writeMode === 'picture' ? '' : `: ${word}`;
+      header.innerHTML = `<span class="ws-title">🖼️ 단어 학습${headerWord} <span style="font-size:13px;font-weight:700;color:#888;margin-left:8px;">${modeLabel}</span></span>`;
       worksheet.appendChild(header);
 
       const layout = document.createElement('div');
@@ -996,9 +1010,11 @@
 
       const wordLabel = document.createElement('div');
       wordLabel.className = 'vocab-word-label';
-      wordLabel.textContent = word;
+      // 그림만 보고 쓰기: 이미지 아래 단어 라벨도 숨겨 글자 힌트를 제거한다
+      wordLabel.textContent = writeMode === 'picture' ? '' : word;
       wordLabel.style.fontSize = `${labelPx}px`;
       wordLabel.style.width = '100%';
+      if (writeMode === 'picture') wordLabel.style.display = 'none';
 
       const imgControls = document.createElement('div');
       imgControls.className = 'img-controls no-print';
@@ -1071,6 +1087,9 @@
         if (writeMode === 'trace') {
           cell.classList.add('hint');
           cell.textContent = chars[colIndex];
+        } else if (writeMode === 'picture') {
+          // 그림만 보고 쓰기: 글자 힌트를 전혀 주지 않고 모든 칸을 빈 칸으로 둔다
+          cell.classList.add('blank');
         } else {
           if (rowIndex === 0) {
             cell.classList.add('hint');
